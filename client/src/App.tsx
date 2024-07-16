@@ -1,23 +1,50 @@
-import { useState } from 'react'
-import { io } from 'socket.io-client';
-
-// Connect to the server
-
-const socket = io('http://localhost:5000');
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthContext } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
+// Components
+import { SearchProvider } from './context/SearchContext';
+import { ConversationProvider } from './context/ConversationContext';
+// Pages
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Home from './pages/Home';
 
 function App() {
-  const [message, setMessage] = useState<String>("hello world")
-  
-  socket.emit('message', message);
-  
-  socket.on('message', (msg) => {
-    console.log(msg);
-  });
+
+  const { user } = useAuthContext();
 
   return (
-    <>
-      <p>{message}</p>
-    </>
+    <section className="App">
+      <BrowserRouter>
+        <div className="Pages">
+            <Routes>
+              <Route 
+                path="/" 
+                element={
+                  user ? 
+                  <SocketProvider>
+                      <SearchProvider>
+                        <ConversationProvider>
+                          <Home />
+                        </ConversationProvider>
+                      </SearchProvider>
+                  </SocketProvider> 
+                  : 
+                  <Navigate to="/login" />
+                }
+              />
+              <Route 
+                path="/login" 
+                element={!user ? <Login /> : <Navigate to="/" />}
+              />
+              <Route 
+                path="/signup" 
+                element={!user ? <Signup /> : <Navigate to="/" />}
+              />
+            </Routes>
+        </div>
+      </BrowserRouter>
+    </section>
   )
 }
 
