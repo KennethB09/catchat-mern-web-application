@@ -1,65 +1,66 @@
 import { createContext, useReducer, ReactNode, useContext } from "react";
 
-interface userInterface {
-  _id: string;
-  username: string;
-}
-
-interface MessagesInterface {
-  sender: string;
-  content: string;
-  createdAt: string;
-}
-
-interface ConversationInterface {
-  _id: string;
-  participants: userInterface[];
-  conversationType: string[];
-  messages: (MessagesInterface[] | null);
-}
-
-
-interface UserConversation {
-  conversation: ConversationInterface | null;
-  recipientUser: userInterface | null;
-}
+// Interfaces
+import { userInterface, MessagesInterface, ConversationInterface, UserConversation } from "../ts/interfaces/Conversation_interface";
 
 type ConversationAction = 
+    { type: 'SET_CONVERSATIONS'; payload: ConversationInterface[] }
+  | { type: 'SET_USER'; payload: userInterface }
   | { type: 'SET_CLICK_CONVERSATION'; payload: ConversationInterface }
-  | { type: 'SET_USER'; payload: userInterface };
+  | { type: 'MESSAGES', payload: MessagesInterface[] }
+  | { type: 'ADD_MESSAGE', payload: MessagesInterface };
 
 interface ConversationContextType {
-  conversation: ConversationInterface | null;
+  conversations: ConversationInterface[] | null;
   recipientUser: userInterface | null;
+  conversation: ConversationInterface | null;
+  messages: MessagesInterface[];
   dispatch: React.Dispatch<ConversationAction>;
 }
 
 export const ConversationContext = createContext<ConversationContextType | undefined>(undefined);
 
-export const conversationReducer = (
-  state: UserConversation, 
-  action: ConversationAction
-): UserConversation => {
+export const conversationReducer = (state: UserConversation, action: ConversationAction): UserConversation => {
+
   switch (action.type) {
-    case 'SET_CLICK_CONVERSATION':
+    case 'SET_CONVERSATIONS': 
       return {
-        ...state,
-        conversation: action.payload
+       ...state,
+        conversations: action.payload
       };
     case 'SET_USER':
       return {
         ...state,
         recipientUser: action.payload
       };
+    case 'SET_CLICK_CONVERSATION':
+      return {
+        ...state,
+        conversation: action.payload
+      };
+      case 'MESSAGES':
+        return {
+         ...state,
+          messages: action.payload
+        };
+      case 'ADD_MESSAGE':
+        return {
+         ...state,
+          messages: [...state.messages, action.payload]
+        };
+    
     default:
       return state;
   }
-}
+
+};
 
 export const ConversationProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(conversationReducer, {
+      conversations: null,
+      recipientUser: null,
       conversation: null,
-      recipientUser: null
+      messages: []
   });
   
 return (

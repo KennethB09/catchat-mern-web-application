@@ -32,15 +32,24 @@ const userSchema = new Schema({
         required: false
     },
 
-    conversations: [conversationSchema],
-
-    contacts: {
-        type: [String]
+    userAvatar: {
+        type: String,
+        required: false
     },
 
-    blockedUser: {
-        type: [String]
-    }
+    conversations: [conversationSchema],
+
+    contacts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
+    }],
+
+    blockedUser: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
+    }]
     
 });
 

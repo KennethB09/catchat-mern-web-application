@@ -1,5 +1,6 @@
 const User = require('../models/UserModel');
 const { Conversation } = require('../models/ConversationModel');
+const mongoose = require('mongoose'); 
 
 const searchUser = async (req, res) => {
     const { username } = req.query;
@@ -32,7 +33,8 @@ const getConversationOrStartNew = async (req, res) => {
 
     res.status(200).json({conversation: findConversation, user: {
         _id: findUser._id,
-        username: findUser.username
+        username: findUser.username,
+        userAvatar: findUser.userAvatar
     }});
 };
 
@@ -40,18 +42,77 @@ const getConversation = async (req, res) => {
     const user_id = req.user._id;
     try {
         const conversations = await Conversation.find({
-            participants: { $all: [ { $elemMatch: { _id: user_id }} ] }
-        });
+            participants: user_id
+        }).populate('participants', 'username userAvatar')
+          .populate('messages.sender', 'username userAvatar')
 
         if (conversations.length === 0) {
-            return res.status(200).json({conversation: null, user: null});
+            return res.status(200).json(conversations);
         }
 
-        res.status(200).json({conversation: conversations});
+        res.status(200).json(conversations);
     } catch (error) {
         console.log(error.message)
         res.status(400).json({error: error.message})
     }
 }
 
-module.exports = { searchUser, getConversation, getConversationOrStartNew };
+const postImageOrAvatar = async (req, res) => {
+    const { userId, image, purpose } = req.body;
+    const extractImage = image.split(',')[1]
+
+    try {
+        await User.updateOne({
+            _id: userId
+        }, {
+            $set: {
+                userAvatar: extractImage
+            }
+        });
+        
+        res.json({userId, extractImage, purpose})
+    } catch (error) {
+        console.log(error.message)
+        res.status(400).json({ error: error.message })
+    }
+};
+
+const createNewGroup = async (req, res) => {
+    const { groupName, groupMember } = req.body;
+    const user = req.user._id
+    console.log(groupName);
+    console.log(groupMember);
+
+    try {
+        const currentUser = await User.findOne({ _id: user });
+
+        const members = [...groupMember, user.toString()].map(id => new mongoose.Types.ObjectId(id));
+        console.log(groupMember);
+        const newConversation = await Conversation.create({
+            participants: members,
+            conversationType: 'group',
+            conversationName: groupName,
+            messages: [{
+                sender: user,
+                content: `Welcome to the group ${groupName}!`
+            }]
+        });
+
+        currentUser.conversations.push(newConversation._id);
+        await currentUser.save();
+
+        res.status(200).json(newConversation)
+    } catch (error) {
+        console.error('Error creating group:', error);
+        res.status(500).json({ message: 'An error occurred while creating the group' });
+    }
+
+}
+
+module.exports = { 
+    searchUser, 
+    getConversation, 
+    getConversationOrStartNew,
+    postImageOrAvatar,
+    createNewGroup
+};

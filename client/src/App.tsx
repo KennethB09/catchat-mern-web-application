@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthContext } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
-// Components
+// Context
+import { useAuthContext } from './context/AuthContext';
 import { SearchProvider } from './context/SearchContext';
 import { ConversationProvider } from './context/ConversationContext';
+import { ThemeProvider } from "@/components/theme-provider"
+
 // Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -22,13 +24,15 @@ function App() {
                 path="/" 
                 element={
                   user ? 
-                  <SocketProvider>
+                  <ThemeProvider>
+                    <SocketProvider>
                       <SearchProvider>
                         <ConversationProvider>
                           <Home />
                         </ConversationProvider>
                       </SearchProvider>
-                  </SocketProvider> 
+                    </SocketProvider> 
+                  </ThemeProvider>
                   : 
                   <Navigate to="/login" />
                 }

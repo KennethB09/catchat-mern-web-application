@@ -6,26 +6,23 @@ const Schema = mongoose.Schema
 
 const conversationSchema = new Schema({
 
-    participants: {
-        type: [{
-            _id: {
-                type: Schema.Types.ObjectId,
-                required: true
-            },
-            username: {
-                type: String,
-                required: true
-            }
-        }],
+    participants: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true
-    },
+    }],
 
     conversationType: {
         type: ['personal', 'group'],
         required: true
     },
 
-    ConversationName: {
+    groupAvatar: {
+        type: String,
+        required: false
+    },
+
+    conversationName: {
         type: String,
         required: false
     },

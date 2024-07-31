@@ -3,41 +3,57 @@ const {Conversation} = require('../models/ConversationModel');
 const {Message} = require('../models/MessageModel');
 const User = require('../models/UserModel');
 
+let onlineUsers = [];
 function socketConnection (io) {
     // Listen for connection event
     io.on('connection', (socket) => {
         
-        socket.emit('userOnline', socket.id);
+        socket.emit('currentUserOnline', true)
 
-        socket.on('private message', async (msg, userId, userUsername, currentUser, currentUserUsername) => {
+        socket.on('isOnline', async (userId) => {
+        
+            try {
+                // Find the user
+                const user = await User.findById(userId);
+                
+                // If the user exists, send the user's online status
+    
+                onlineUsers.push({
+                    userId: user._id.toString(),
+                    username: user.username,
+                    userAvatar: user.userAvatar,
+                    socketId: socket.id
+                });
+
+                socket.emit('userOnlineStatus', onlineUsers);
+          
+                
+            } catch (error) {
+                console.error('Error finding user:', error.message);
+            }
+        });
+
+        socket.on('conversation click', conversationId => {
+            socket.join(conversationId.toString())
+        });
+
+        socket.on('private message', async (msg, recipientId, senderId) => {
             
             // Create a new Message
-            const newMessage =  new Message({
-                sender: currentUser,
-                content: msg
-            });
+            const newMessage =  new Message(msg);
 
             try {
-                // Find a conversation that have the two users ID
                 const conversation = await Conversation.findOne({
-                    participants: { $all: [
-                        { $elemMatch: { _id: currentUser} },
-                        { $elemMatch: { _id: userId } }
-                    ]}
-                });
+                    participants: { $all: [senderId, recipientId] },
+                    conversationType: "personal"
+                }).populate('participants', 'username userAvatar')
+                  .populate('messages.sender', 'username userAvatar');
                 
                 // If no conversation found, create a new one
                 if (!conversation) {
 
                     const newConversation = new Conversation({
-                        participants: [{
-                            _id: currentUser,
-                            username: currentUserUsername
-                        }, {
-                            _id: userId,
-                            username: userUsername
-                        }],
-
+                        participants: [senderId, recipientId],
                         conversationType: "personal",
                         messages: [newMessage]
                     });
@@ -45,7 +61,7 @@ function socketConnection (io) {
                     await newConversation.save();
 
                     await User.updateMany({
-                        _id: {$in: [currentUser, userId]}},
+                        _id: {$in: [senderId, recipientId]}},
                         {
                             $push: {conversations: newConversation._id}
                         }
@@ -56,13 +72,31 @@ function socketConnection (io) {
 
                 await conversation.updateOne({$push: { messages: newMessage }});
 
-                socket.join(conversation._id.toString());
-                socket.to(conversation._id.toString()).emit('messageReceive', msg);
+                socket.to(conversation._id.toString()).emit('messageReceive', newMessage);
 
             } catch (error) {
                 console.error('Error sending private message:', error.message);
             }
+        });
+
+        socket.on('group message', async (msg, groupId) => {
+
+            const newMessage =  new Message(msg);
+
+            try {
+                const conversation = await Conversation.findOne({ _id: groupId });
+                await conversation.updateOne({$push: { messages: newMessage }})
+                socket.to(conversation._id.toString()).emit('messageReceive', newMessage);
+            } catch (error) {
+                console.log('Error sending group message:', error.message)
+            }
         })
+
+        socket.on('disconnect', () => {
+            onlineUsers = onlineUsers.filter(user => user.socketId !==  socket.id && user.socketId !== user.socketId);
+            socket.emit('userOnlineStatus', onlineUsers);
+        });
+
     })
 }
 

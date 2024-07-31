@@ -3,6 +3,7 @@ import { createContext, useState, useContext } from 'react';
 interface UserResultInterface{
     _id: string;
     username: string;
+    userAvatar: string;
 }
 
 interface SearchContextType {
