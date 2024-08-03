@@ -37,6 +37,11 @@ const userSchema = new Schema({
         required: false
     },
 
+    userStatus: {
+        type: String,
+        required: false
+    },
+
     conversations: [conversationSchema],
 
     contacts: [{

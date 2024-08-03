@@ -8,9 +8,10 @@ import { useState } from "react";
 
 interface CreateGroupProps {
     createGroup: () => void;
+    toggleState: () => void
 }
 
-export default function CreateGroup({ createGroup }: CreateGroupProps) {
+export default function CreateGroup({ createGroup, toggleState }: CreateGroupProps) {
 
     const { user } = useAuthContext();
     const { dispatch } = useConversationContext();
@@ -36,6 +37,7 @@ export default function CreateGroup({ createGroup }: CreateGroupProps) {
 
         const json = await response.json();
         if (response.ok) {
+            toggleState()
             createGroup();
             dispatch({ type: 'MESSAGES', payload: json.messages });
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: json })

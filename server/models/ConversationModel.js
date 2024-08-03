@@ -7,9 +7,16 @@ const Schema = mongoose.Schema
 const conversationSchema = new Schema({
 
     participants: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        role: {
+            type: ['admin','member'],
+            default: 'member',
+            required: false
+        }
     }],
 
     conversationType: {

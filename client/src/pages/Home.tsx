@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import ConversationList from '../components/ConversationsList';
 import Conversation from "../components/Conversation";
 import Header from '../components/Header';
-// Shadcn Components
+// UI Components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Context Hooks
@@ -14,25 +14,18 @@ import { useAuthContext } from '../context/AuthContext';
 import { useConversationContext } from '../context/ConversationContext';
 
 // Interfaces
-import { ConversationInterface } from '../ts/interfaces/Conversation_interface';
-
-interface onlineUsersInterface {
-    userId: string;
-    username: string;
-    userAvatar: string;
-    online: boolean;
-}
+import { ConversationInterface, userInterface } from '../ts/interfaces/Conversation_interface';
 
 export default function Home() {
 
     const socket = useSocket();
     const { user } = useAuthContext();
     const { conversations, dispatch } = useConversationContext();
-    const [isOnline, setIsOnline] = useState<onlineUsersInterface[] | null>(null);
+    const [isOnline, setIsOnline] = useState<userInterface[] | null>(null);
     const [onClickConversation, setOnClickConversation] = useState(false);
 
     function onClick() {
-        setOnClickConversation(prev => !prev)
+        setOnClickConversation(prev => !prev);
     };
 
     useEffect(() => {
@@ -54,20 +47,24 @@ export default function Home() {
             fetchData();
         }
 
-    }, [user, socket.on]);
+    }, [user]);
 
-
+    
     useEffect(() => {
-        socket.on('currentUserOnline', isTrue => {
-            if (isTrue) {
+
+        socket.on('currentUserOnline', (state: boolean) => {
+            if (state) {
                 socket.emit('isOnline', user.userId)
+            } else {
+                socket.emit('isOffline', user.userId)
             }
         });
 
-        socket.on('userOnlineStatus', (onlineUsers: onlineUsersInterface[]) => {
+        socket.on('onlineContacts', (onlineUsers: userInterface[]) => {
             setIsOnline(onlineUsers);
         });
-    }, [socket.on])
+
+    }, [socket])
 
     return (
         <div className='h-screen'>
@@ -99,7 +96,9 @@ export default function Home() {
                 </TabsContent>
 
             </Tabs>
+
             <Conversation onClickConversation={onClickConversation} onClick={onClick} />
+
         </div>
     );
 }

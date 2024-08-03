@@ -24,8 +24,8 @@ const getConversationOrStartNew = async (req, res) => {
 
     const findConversation = await Conversation.findOne({
         participants: { $all: [
-            { $elemMatch: { _id: currentUserId} },
-            { $elemMatch: { _id: userId } }
+            { $elemMatch: { user: currentUserId} },
+            { $elemMatch: { user: userId } }
         ]}
     });
 
@@ -42,8 +42,10 @@ const getConversation = async (req, res) => {
     const user_id = req.user._id;
     try {
         const conversations = await Conversation.find({
-            participants: user_id
-        }).populate('participants', 'username userAvatar')
+            participants: {
+                $elemMatch: { user: user_id }
+            }
+        }).populate('participants.user', 'username userAvatar email')
           .populate('messages.sender', 'username userAvatar')
 
         if (conversations.length === 0) {
@@ -79,15 +81,23 @@ const postImageOrAvatar = async (req, res) => {
 
 const createNewGroup = async (req, res) => {
     const { groupName, groupMember } = req.body;
-    const user = req.user._id
-    console.log(groupName);
-    console.log(groupMember);
+    const user = req.user._id;
 
     try {
         const currentUser = await User.findOne({ _id: user });
+        
+        // Create consistent objects for all members
+        const members = groupMember.map(id => ({
+            user: new mongoose.Types.ObjectId(id),
+            role: 'member'
+        }));
 
-        const members = [...groupMember, user.toString()].map(id => new mongoose.Types.ObjectId(id));
-        console.log(groupMember);
+        // Add current user as admin
+        members.push({
+            user: currentUser._id,
+            role: 'admin'
+        });
+
         const newConversation = await Conversation.create({
             participants: members,
             conversationType: 'group',
@@ -98,15 +108,23 @@ const createNewGroup = async (req, res) => {
             }]
         });
 
-        currentUser.conversations.push(newConversation._id);
-        await currentUser.save();
+        // Extract just the user IDs for updating User documents
+        const memberIds = members.map(member => member.user);
 
-        res.status(200).json(newConversation)
+        await User.updateMany(
+            { _id: { $in: memberIds } },
+            {
+                $push: {
+                    conversations: newConversation._id
+                }
+            }
+        );
+
+        res.status(200).json(newConversation);
     } catch (error) {
         console.error('Error creating group:', error);
         res.status(500).json({ message: 'An error occurred while creating the group' });
     }
-
 }
 
 module.exports = { 

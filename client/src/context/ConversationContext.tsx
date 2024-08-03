@@ -3,8 +3,8 @@ import { createContext, useReducer, ReactNode, useContext } from "react";
 // Interfaces
 import { userInterface, MessagesInterface, ConversationInterface, UserConversation } from "../ts/interfaces/Conversation_interface";
 
-type ConversationAction = 
-    { type: 'SET_CONVERSATIONS'; payload: ConversationInterface[] }
+type ConversationAction =
+  { type: 'SET_CONVERSATIONS'; payload: ConversationInterface[] }
   | { type: 'SET_USER'; payload: userInterface }
   | { type: 'SET_CLICK_CONVERSATION'; payload: ConversationInterface }
   | { type: 'MESSAGES', payload: MessagesInterface[] }
@@ -23,51 +23,50 @@ export const ConversationContext = createContext<ConversationContextType | undef
 export const conversationReducer = (state: UserConversation, action: ConversationAction): UserConversation => {
 
   switch (action.type) {
-    case 'SET_CONVERSATIONS': 
-      return {
-       ...state,
-        conversations: action.payload
-      };
-    case 'SET_USER':
+    case 'SET_CONVERSATIONS':
       return {
         ...state,
-        recipientUser: action.payload
+        conversations: action.payload
       };
     case 'SET_CLICK_CONVERSATION':
       return {
         ...state,
         conversation: action.payload
       };
-      case 'MESSAGES':
-        return {
-         ...state,
-          messages: action.payload
-        };
-      case 'ADD_MESSAGE':
-        return {
-         ...state,
-          messages: [...state.messages, action.payload]
-        };
-    
+    case 'SET_USER':
+      return {
+        ...state,
+        recipientUser: action.payload
+      };
+    case 'MESSAGES':
+      return {
+        ...state,
+        messages: action.payload
+      };
+    case 'ADD_MESSAGE':
+      return {
+        ...state,
+        messages: [...state.messages, action.payload]
+      };
+
     default:
       return state;
   }
-
 };
 
 export const ConversationProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(conversationReducer, {
-      conversations: null,
-      recipientUser: null,
-      conversation: null,
-      messages: []
+    conversations: null,
+    recipientUser: null,
+    conversation: null,
+    messages: []
   });
-  
-return (
-  <ConversationContext.Provider value={{ ...state, dispatch }}>
-    {children}
-  </ConversationContext.Provider>
-);
+
+  return (
+    <ConversationContext.Provider value={{ ...state, dispatch }}>
+      {children}
+    </ConversationContext.Provider>
+  );
 }
 
 export const useConversationContext = (): ConversationContextType => {

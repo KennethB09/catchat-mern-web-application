@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import blankAvatar from '../assets/avatar/blank avatar.jpg'
 
 // Interfaces
-import { userInterface, ConversationInterface } from '../ts/interfaces/Conversation_interface';
+import { ConversationInterface, participantsInterface } from '../ts/interfaces/Conversation_interface';
 
 interface ConversationListProps {
   conversation: ConversationInterface;
@@ -22,11 +22,13 @@ export default function ConversationList({ conversation, onClickConversation }: 
   const { dispatch } = useConversationContext();
   const { user } = useAuthContext();
 
-  const username: userInterface[] = conversation.participants.filter(participant => participant._id !== user.userId);
+  const username: participantsInterface[] = conversation.participants.filter(participant => participant.user._id !== user.userId);
+
   const newMessage = conversation.messages?.sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  })
-  const avatar = conversation.participants.filter(u => u._id.toString() !== user.userId.toString());
+  });
+
+  const avatar = conversation.participants.filter(u => u.user._id.toString() !== user.userId.toString());
 
   function conversationClick() {
     onClickConversation();
@@ -34,8 +36,8 @@ export default function ConversationList({ conversation, onClickConversation }: 
     if (conversation.conversationType == 'personal') {
       dispatch({ type: 'MESSAGES', payload: conversation.messages! });
       dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
-      dispatch({ type: 'SET_USER', payload: username[0] });
-    } else if(conversation.conversationType == 'group') {
+      dispatch({ type: 'SET_USER', payload: username[0].user });
+    } else {
       dispatch({ type: 'MESSAGES', payload: conversation.messages! });
       dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
     }
@@ -46,11 +48,11 @@ export default function ConversationList({ conversation, onClickConversation }: 
       {conversation.conversationType == 'personal' ? (
         <>
           <div className='aspect-square'>
-            <img className="w-full h-full rounded-full" src={avatar[0].userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${avatar[0].userAvatar}`} />
+            <img className="w-full h-full rounded-full" src={avatar[0].user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${avatar[0].user.userAvatar}`} />
           </div>
           <div className='ml-4 w-full'>
             <div className='text-orange-500 dark:text-slate-50'>
-              <strong>{username[0].username}</strong>
+              <strong>{username[0].user.username}</strong>
             </div>
             {newMessage![0] && (
               <div className='grid grid-cols-2 text-slate-500 w-full'>

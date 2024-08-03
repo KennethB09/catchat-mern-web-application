@@ -1,7 +1,14 @@
 export interface userInterface {
     _id: string;
-    username: string | null;
+    username: string;
     userAvatar: string | null;
+    email?: string
+    userStatus?: string
+}
+
+export interface participantsInterface {
+    user: userInterface;
+    role: 'admin' | 'member'
 }
 
 export interface MessagesInterface {
@@ -12,7 +19,7 @@ export interface MessagesInterface {
 
 export interface ConversationInterface {
     _id: string;
-    participants: userInterface[];
+    participants: participantsInterface[];
     conversationType: string;
     groupAvatar: string;
     conversationName: string;
