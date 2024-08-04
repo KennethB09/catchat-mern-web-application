@@ -1,24 +1,20 @@
+import { socket } from '../socket';
 // Hooks
 import { useState, useEffect } from 'react';
-
 // Components
 import ConversationList from '../components/ConversationsList';
 import Conversation from "../components/Conversation";
 import Header from '../components/Header';
 // UI Components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
 // Context Hooks
-import { useSocket } from '../context/SocketContext';
 import { useAuthContext } from '../context/AuthContext';
 import { useConversationContext } from '../context/ConversationContext';
-
 // Interfaces
 import { ConversationInterface, userInterface } from '../ts/interfaces/Conversation_interface';
 
 export default function Home() {
 
-    const socket = useSocket();
     const { user } = useAuthContext();
     const { conversations, dispatch } = useConversationContext();
     const [isOnline, setIsOnline] = useState<userInterface[] | null>(null);
@@ -45,6 +41,7 @@ export default function Home() {
 
         if (user) {
             fetchData();
+            socket.connect();
         }
 
     }, [user]);
@@ -52,19 +49,19 @@ export default function Home() {
     
     useEffect(() => {
 
-        socket.on('currentUserOnline', (state: boolean) => {
-            if (state) {
-                socket.emit('isOnline', user.userId)
-            } else {
-                socket.emit('isOffline', user.userId)
-            }
+        socket.on('connect', () => {
+            socket.emit('isOnline', user.userId)
         });
 
         socket.on('onlineContacts', (onlineUsers: userInterface[]) => {
             setIsOnline(onlineUsers);
         });
 
-    }, [socket])
+        return () => {
+            socket.off('connect');
+            socket.disconnect();
+        };
+    });
 
     return (
         <div className='h-screen'>

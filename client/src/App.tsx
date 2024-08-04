@@ -1,8 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SocketProvider } from './context/SocketContext';
 // Context
 import { useAuthContext } from './context/AuthContext';
-import { SearchProvider } from './context/SearchContext';
 import { ConversationProvider } from './context/ConversationContext';
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -19,33 +17,29 @@ function App() {
     <section className="App">
       <BrowserRouter>
         <div className="Pages">
-            <Routes>
-              <Route 
-                path="/" 
-                element={
-                  user ? 
+          <Routes>
+            <Route
+              path="/"
+              element={
+                user ?
                   <ThemeProvider>
-                    <SocketProvider>
-                      <SearchProvider>
-                        <ConversationProvider>
-                          <Home />
-                        </ConversationProvider>
-                      </SearchProvider>
-                    </SocketProvider> 
+                    <ConversationProvider>
+                      <Home />
+                    </ConversationProvider>
                   </ThemeProvider>
-                  : 
+                  :
                   <Navigate to="/login" />
-                }
-              />
-              <Route 
-                path="/login" 
-                element={!user ? <Login /> : <Navigate to="/" />}
-              />
-              <Route 
-                path="/signup" 
-                element={!user ? <Signup /> : <Navigate to="/" />}
-              />
-            </Routes>
+              }
+            />
+            <Route
+              path="/login"
+              element={!user ? <Login /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/signup"
+              element={!user ? <Signup /> : <Navigate to="/" />}
+            />
+          </Routes>
         </div>
       </BrowserRouter>
     </section>

@@ -1,7 +1,7 @@
 // Context
 import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from '../context/AuthContext';
-import { useSocket } from '../context/SocketContext';
+import { socket } from '../socket';
 
 import { format } from 'date-fns';
 
@@ -17,8 +17,6 @@ interface ConversationListProps {
 
 export default function ConversationList({ conversation, onClickConversation }: ConversationListProps) {
 
-  const { socket } = useSocket();
-
   const { dispatch } = useConversationContext();
   const { user } = useAuthContext();
 
@@ -32,13 +30,11 @@ export default function ConversationList({ conversation, onClickConversation }: 
 
   function conversationClick() {
     onClickConversation();
-    socket?.emit('conversation click', conversation._id)
+    socket.emit('conversation click', conversation._id)
     if (conversation.conversationType == 'personal') {
-      dispatch({ type: 'MESSAGES', payload: conversation.messages! });
       dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
       dispatch({ type: 'SET_USER', payload: username[0].user });
     } else {
-      dispatch({ type: 'MESSAGES', payload: conversation.messages! });
       dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
     }
   };

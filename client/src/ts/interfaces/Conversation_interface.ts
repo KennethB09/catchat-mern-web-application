@@ -27,9 +27,8 @@ export interface ConversationInterface {
 }
 
 
-export interface UserConversation {
+export type UserConversation = {
     conversations: ConversationInterface[] | null;
     recipientUser: userInterface | null;
     conversation: ConversationInterface | null;
-    messages: MessagesInterface[];
 }

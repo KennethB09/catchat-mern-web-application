@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 // Context Hooks
-import { useSocket } from '../context/SocketContext';
+import { socket } from '../socket';
 import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from '../context/AuthContext';
 // Assets
@@ -26,9 +26,8 @@ type ConversationProps = {
 }
 export default function Conversation({ onClickConversation, onClick }: ConversationProps) {
 
-    const socket = useSocket();
     const { user } = useAuthContext();
-    const { conversation, messages, recipientUser, dispatch } = useConversationContext();
+    const { conversation, recipientUser, dispatch } = useConversationContext();
     const [message, setMessage] = useState<string>('')
     const newMessageRef = useRef<HTMLDivElement>(null);
 
@@ -48,14 +47,17 @@ export default function Conversation({ onClickConversation, onClick }: Conversat
         // handle conversation submission here
         if (conversation?.conversationType == 'personal') {
             socket.emit('private message', newMessage, recipientUser!._id, user.userId);
-            dispatch({ type: 'ADD_MESSAGE', payload: newMessage })
+            dispatch({ type: 'UPDATE_CONVERSATIONS', payload: {conversationId: conversation._id, newMessage: newMessage} });
+            dispatch({ type: 'ADD_MESSAGE', payload: newMessage });
             setMessage('')
         } else if (conversation?.conversationType == 'group') {
             socket.emit('group message', newMessage, conversation?._id);
-            dispatch({ type: 'ADD_MESSAGE', payload: newMessage })
+            dispatch({ type: 'UPDATE_CONVERSATIONS', payload: {conversationId: conversation._id, newMessage: newMessage} });
+            dispatch({ type: 'ADD_MESSAGE', payload: newMessage });
             setMessage('')
         } else {
             socket.emit('private message', newMessage, recipientUser!._id, user.userId);
+            dispatch({ type: 'UPDATE_CONVERSATIONS', payload: {conversationId: conversation!._id, newMessage: newMessage} });
             dispatch({ type: 'ADD_MESSAGE', payload: newMessage })
             setMessage('')
         }
@@ -64,13 +66,13 @@ export default function Conversation({ onClickConversation, onClick }: Conversat
     useEffect(() => {
 
         socket.on('messageReceive', (msgR) => {
+            dispatch({ type: 'UPDATE_CONVERSATIONS', payload: {conversationId: conversation!._id, newMessage: msgR} });
             dispatch({ type: 'ADD_MESSAGE', payload: msgR })
-            console.log(msgR)
         });
 
     }, [socket]);
 
-    const sortMessages = messages.sort((a, b) => {
+    const sortMessages = conversation?.messages!.sort((a, b) => {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     });
 
