@@ -6,9 +6,9 @@ import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from "../context/AuthContext";
 import { useState } from "react";
 
-interface CreateGroupProps {
+type CreateGroupProps = {
     createGroup: () => void;
-    toggleState: () => void
+    toggleState: () => void;
 }
 
 export default function CreateGroup({ createGroup, toggleState }: CreateGroupProps) {
@@ -19,7 +19,7 @@ export default function CreateGroup({ createGroup, toggleState }: CreateGroupPro
 
     const handleClick = async (e: React.FocusEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const form = document.getElementById('addUserFormFromSearch') as HTMLFormElement;
+        const form = document.getElementById('createGroup') as HTMLFormElement;
         const formData = new FormData(form);
         const selectedUsers = formData.getAll('users') as string[];
 
@@ -39,14 +39,14 @@ export default function CreateGroup({ createGroup, toggleState }: CreateGroupPro
         if (response.ok) {
             toggleState()
             createGroup();
-            dispatch({ type: 'MESSAGES', payload: json.messages });
+            dispatch({ type: 'ADD_MESSAGE', payload: json.messages });
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: json })
         };
-    }
+    };
 
     return (
         <div className=''>
-            <Button form="addUserFormFromSearch" type="submit" variant={'default'} className="absolute right-4 top-4 p-3 h-8 bg-orange-500 text-slate-50">Create</Button>
+            <Button form='createGroup' type="submit" variant={'default'} className="absolute right-4 top-4 p-3 h-8 bg-orange-500 text-slate-50">Create</Button>
             <div className='py-4'>
                 <label htmlFor="createGroupInput" className="font-semibold text-orange-500 dark:text-slate-50">Group name: </label>
                 <input
@@ -57,7 +57,7 @@ export default function CreateGroup({ createGroup, toggleState }: CreateGroupPro
                     onChange={e => setGroupName(e.target.value)}
                 />
             </div>
-            <SearchBar type="checkbox" handleClick={handleClick} />
+            <SearchBar type="checkbox" handleClick={handleClick} searchBarFormId='createGroup' />
         </div>
     )
 }

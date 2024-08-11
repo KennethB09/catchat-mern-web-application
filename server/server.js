@@ -14,14 +14,15 @@ const server = http.createServer(app)
 const io = socketIo(server, {
   cors: {
     origin: [process.env.CORS_ORIGIN, "https://h3wrw7sw-5173.asse.devtunnels.ms/"],
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    perMessageDeflate: true
   }
 });
 
 // Use cors middleware
 app.use(cors({
   origin: [process.env.CORS_ORIGIN, "https://h3wrw7sw-5173.asse.devtunnels.ms/"],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH',  'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 

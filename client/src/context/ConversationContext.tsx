@@ -8,12 +8,17 @@ type ConversationAction =
   | { type: 'UPDATE_CONVERSATIONS'; payload: { conversationId: string; newMessage: MessagesInterface } }
   | { type: 'SET_USER'; payload: userInterface }
   | { type: 'SET_CLICK_CONVERSATION'; payload: ConversationInterface }
-  | { type: 'ADD_MESSAGE'; payload: MessagesInterface };
+  | { type: 'ADD_MESSAGE'; payload: MessagesInterface }
+  | { type: 'LEAVE_GROUP'; payload: ConversationInterface }
+  | { type: 'USER_BLOCKED_USERS'; payload: userInterface[] }
+  | { type: 'BLOCK_USER'; payload: userInterface }
+  | { type: 'UNBLOCK_USER'; payload: userInterface }
 
 type ConversationContextType = {
   conversations: ConversationInterface[] | null;
   recipientUser: userInterface | null;
   conversation: ConversationInterface | null;
+  blockedUsers: userInterface[];
   dispatch: React.Dispatch<ConversationAction>;
 }
 
@@ -56,6 +61,26 @@ export const conversationReducer = (state: UserConversation, action: Conversatio
           messages: [...state.conversation.messages!, action.payload]
         } : null
       };
+    case 'LEAVE_GROUP':
+      return {
+        ...state,
+        conversations: state.conversations!.filter(c => c._id !== action.payload._id)
+      };
+    case 'USER_BLOCKED_USERS':
+      return {
+        ...state,
+        blockedUsers: action.payload
+      }
+    case 'BLOCK_USER':
+      return {
+        ...state,
+        blockedUsers: [...state.blockedUsers!, action.payload]
+      }
+    case 'UNBLOCK_USER':
+      return {
+        ...state,
+        blockedUsers: state.blockedUsers!.filter(u => u._id!== action.payload._id)
+      }
     default:
       return state;
   }
@@ -65,7 +90,8 @@ export const ConversationProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(conversationReducer, {
     conversations: null,
     recipientUser: null,
-    conversation: null
+    conversation: null,
+    blockedUsers: [],
   });
 
   return (

@@ -8,7 +8,11 @@ function socketConnection (io) {
     // Listen for connection event
     io.on('connection', (socket) => {
 
-        socket.emit('currentUserOnline', true)
+        socket.on('join conversations', (conversationIds) => {
+
+            socket.join(conversationIds);
+            console.log('joined', conversationIds)
+        });
 
         socket.on('isOnline', async (userId) => {
           
@@ -30,20 +34,15 @@ function socketConnection (io) {
                     _id: { $in: user.contacts },
                     userStatus: "online"
                 });
-        
+
                 socket.emit('onlineContacts', onlineContacts)
-           
+                
             } catch (error) {
                 console.error('Error finding user:', error.message);
             }
         });
 
-        socket.on('conversation click', conversationId => {
-            socket.join(conversationId.toString())
-        });
-
         socket.on('private message', async (msg, recipientId, senderId) => {
-            
             // Create a new Message
             const newMessage =  new Message(msg);
 
@@ -103,8 +102,10 @@ function socketConnection (io) {
 
                 await conversation.updateOne({ $push: { messages: newMessage } });
 
-                socket.to(conversation._id.toString()).emit('messageReceive', msg);
+                const conversationId = conversation._id.toString();
 
+                socket.to(conversationId).emit('messageReceive', msg, conversationId);
+         
             } catch (error) {
                 console.error('Error sending private message:', error.message);
             }
@@ -127,6 +128,8 @@ function socketConnection (io) {
 
         socket.on('disconnect', async () => {
 
+     
+
             const logoutUser = users.filter(u => u.socketId === socket.id);
 
             try {
@@ -145,20 +148,6 @@ function socketConnection (io) {
                 console.error('Failed logout:', error.message);
             }
 
-        });
-
-        socket.on('isOffline', async (userId) => {
-
-            try {
-                // Find the user and update the status
-                await User.findOneAndUpdate(
-                    {_id: userId},
-                    {userStatus: "offline"}
-                );
-                console.log('user is offline')
-            } catch (error) {
-                console.error('Error finding user:', error.message);
-            }
         });
     })
 }

@@ -10,7 +10,7 @@ import Navigation from "./Navigation";
 import blankAvatar from '../assets/avatar/blank avatar.jpg';
 import CreateGroup from "./CreateConversation";
 
-// Shadcn component
+// UI component
 import {
     Sheet,
     SheetTitle,
@@ -18,7 +18,7 @@ import {
     SheetContent,
     SheetClose,
     SheetTrigger,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 
 interface dataInterface {
     conversation: ConversationInterface;
@@ -80,10 +80,10 @@ export default function Header({ onlineUsers, onClickUser }: HeaderProps) {
                             </svg>
                         </SheetTrigger>
                         <SheetContent side='left' className="dark:bg-gray-800 border-none">
-                           <Navigation />
+                            <Navigation />
                         </SheetContent>
                     </Sheet>
-                    
+
                     <Sheet open={toggle}>
                         <SheetTitle className='hidden'>
                             create group
@@ -92,23 +92,23 @@ export default function Header({ onlineUsers, onClickUser }: HeaderProps) {
                             Create a new group
                         </SheetDescription>
                         <SheetTrigger className="ml-auto " onClick={onClick}>
-                            <svg className="fill-orange-500 border-orange-500 w-7 h-7 border-2 rounded-full" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
-                                <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
+                            <svg className='fill-orange-500 w-8 h-8' xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
+                                <path d="M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160Zm40 200q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
                             </svg>
                         </SheetTrigger>
-                        
+
                         <SheetContent side='right' className="dark:bg-gray-800 border-none w-full">
                             <SheetClose onClick={onClick}>
                                 <svg className="fill-orange-600 opacity-70 transition-opacity hover:opacity-100" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
                                     <path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z" />
                                 </svg>
                             </SheetClose>
-                            <CreateGroup createGroup={onClickUser} toggleState={onClick}/>
+                            <CreateGroup createGroup={onClickUser} toggleState={onClick} />
                         </SheetContent>
                     </Sheet>
                 </div>
 
-                <SearchBar handleClick={handleClick} type='onClick' />
+                <SearchBar handleClick={handleClick} type='onClick' placeholder='Search' />
 
                 <div className="pt-4 flex gap-2 overflow-y-scroll">
                     {onlineUsers && onlineUsers.map(users => (

@@ -72,7 +72,8 @@ export default function UploadImage() {
 
   return (
     <>
-      <div className="ml-12 bottom-0 absolute">
+     
+
         <ImageUploading
           multiple={false}
           value={[]}
@@ -81,18 +82,17 @@ export default function UploadImage() {
           maxNumber={maxNumber}
         >
           {({ onImageUpload }) => (
-            <button onClick={onImageUpload} className='ml-1 mb-2 p-1 bg-orange-500 rounded-full'>
-              <svg className='w-4 h-4' xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-                <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
-              </svg>
+            <button onClick={onImageUpload} className='bg-none text-xs'>
+              Change Avatar
             </button>
           )}
         </ImageUploading>
 
-      </div>
+ 
 
       {image && (
-        <div className='absolute w-screen h-screen top-0 flex flex-col space-y-4 justify-center bg-black'>
+        <div className='absolute w-screen h-screen top-0 right-0 left-0 z-50 flex flex-col space-y-4 p-2 justify-center bg-black'>
+
           <div className='relative h-4/5'>
 
             <Cropper
@@ -104,10 +104,12 @@ export default function UploadImage() {
               onCropComplete={onCropComplete}
               onZoomChange={setZoom}
             />
+
           </div>
         
-            <button onClick={showCroppedImage} className='text-slate-50 bg-orange-500'>save</button>
-            <button onClick={cancelCrop} className='text-slate-50 bg-none'>cancel</button>
+            <button onClick={showCroppedImage} className='text-slate-50 bg-orange-500 my-2 rounded-sm p-2'>Save</button>
+            <button onClick={cancelCrop} className='text-orange-500 bg-none border-2 border-orange-500 my-2 rounded-sm p-2'>Cancel</button>
+
         </div>
       )}
     </>

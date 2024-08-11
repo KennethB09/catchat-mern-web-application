@@ -1,5 +1,7 @@
 // Context Hook
 import { useConversationContext } from '../context/ConversationContext';
+import { useAuthContext } from "../context/AuthContext";
+import { useToastContext } from '@/hooks/useToast';
 // Assets
 import blankAvatar from '../assets/avatar/blank avatar.jpg';
 // Components
@@ -15,8 +17,95 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 
-export default function () {
-    const { recipientUser, conversation } = useConversationContext()
+type ConversationInfoProps = {
+    isUserBlocked: boolean | null;
+    leaveConversation: () => void;
+    onSheetOpen: () => void; 
+}
+
+export default function ConversationInfo({ isUserBlocked, leaveConversation, onSheetOpen }:ConversationInfoProps) {
+    const { recipientUser, conversation, dispatch } = useConversationContext();
+    const { user } = useAuthContext();
+    const { toast } = useToastContext();
+
+    const leaveGroup = async () => {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/conversation-leave-group`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${user.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: user.userId,
+                groupId: conversation?._id
+            })
+        });
+
+        const json = await response.json();
+
+        if (response.ok) {
+            leaveConversation();
+            onSheetOpen();
+            dispatch({ type: 'LEAVE_GROUP', payload: json.leavedGroup })
+        } else {
+            toast({
+                title: "Ops, something when't wrong",
+                description: json.message,
+                variant: 'destructive'
+            })
+        }
+    };
+
+    const blockUser = async () => {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/block-user`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${user.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userToBlockId: recipientUser?._id
+            })
+        });
+
+        const json = await response.json();
+
+        if (response.ok) {
+            dispatch({ type: 'BLOCK_USER', payload: json.blockedUser })
+        } else {
+            toast({
+                title: "Ops, something when't wrong",
+                description: json.message,
+                variant: 'destructive'
+            })
+        }
+    };
+
+    const unblockUser = async () => {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/unblock-user`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${user.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userToUnblockId: recipientUser?._id
+            })
+        });
+
+        const json = await response.json();
+
+        if (response.ok) {
+            dispatch({ type: 'UNBLOCK_USER', payload: json.unBlockUser })
+        } else {
+            toast({
+                title: "Ops, something when't wrong",
+                description: json.message,
+                variant: 'destructive'
+            })
+        }
+    };
+
     return (
         <aside className="h-full">
             {conversation?.conversationType == 'personal' ?
@@ -65,12 +154,15 @@ export default function () {
                                 <GroupMembers group_members={conversation.participants} />
                             </SheetContent>
                         </Sheet>
-                        <Button variant='destructive' className="w-full font-semibold uppercase">Leave</Button>
+                        <Button variant='destructive' className="w-full font-semibold uppercase" onClick={leaveGroup}>Leave</Button>
                     </>
                     :
                     <>
-
-                        <Button variant='destructive' className="w-full font-semibold uppercase">Block User</Button>
+                        {!isUserBlocked ?
+                            <Button variant='destructive' className="w-full font-semibold uppercase" onClick={blockUser}>Block User</Button>
+                            :
+                            <Button variant='default' className="w-full font-semibold uppercase" onClick={unblockUser}>unBlock User</Button>
+                        }
                     </>
                 }
             </div>

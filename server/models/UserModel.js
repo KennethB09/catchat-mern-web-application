@@ -42,7 +42,11 @@ const userSchema = new Schema({
         required: false
     },
 
-    conversations: [conversationSchema],
+    conversations: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Conversation',
+        required: false
+    }],
 
     contacts: [{
         type: mongoose.Schema.Types.ObjectId,

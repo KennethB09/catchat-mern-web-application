@@ -31,4 +31,5 @@ export type UserConversation = {
     conversations: ConversationInterface[] | null;
     recipientUser: userInterface | null;
     conversation: ConversationInterface | null;
+    blockedUsers: userInterface[];
 }

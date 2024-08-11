@@ -1,12 +1,10 @@
 // Context
 import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from '../context/AuthContext';
-import { socket } from '../socket';
 
 import { format } from 'date-fns';
-
+// Assets
 import blankAvatar from '../assets/avatar/blank avatar.jpg'
-
 // Interfaces
 import { ConversationInterface, participantsInterface } from '../ts/interfaces/Conversation_interface';
 
@@ -29,8 +27,9 @@ export default function ConversationList({ conversation, onClickConversation }: 
   const avatar = conversation.participants.filter(u => u.user._id.toString() !== user.userId.toString());
 
   function conversationClick() {
+
     onClickConversation();
-    socket.emit('conversation click', conversation._id)
+
     if (conversation.conversationType == 'personal') {
       dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
       dispatch({ type: 'SET_USER', payload: username[0].user });
@@ -51,8 +50,10 @@ export default function ConversationList({ conversation, onClickConversation }: 
               <strong>{username[0].user.username}</strong>
             </div>
             {newMessage![0] && (
-              <div className='grid grid-cols-2 text-slate-500 w-full'>
-                <p className='text-ellipsis whitespace-nowrap overflow-hidden'>{newMessage![0].content}</p>
+              <div className='grid grid-cols-2 w-full text-slate-500'>
+                <div className='w-full'>
+                  <p className='text-ellipsis whitespace-nowrap overflow-hidden'>{newMessage![0].sender._id === user.userId ? 'You: ' + newMessage![0].content : newMessage![0].content}</p>
+                </div>
                 <span className='whitespace-nowrap ml-auto'>{format(new Date(newMessage![0].createdAt), 'h:mm a')}</span>
               </div>
             )}

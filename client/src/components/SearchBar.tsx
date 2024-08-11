@@ -3,17 +3,22 @@ import { useAuthContext } from "../context/AuthContext";
 import { userInterface } from "../ts/interfaces/Conversation_interface";
 import blankAvatar from '../assets/avatar/blank avatar.jpg'
 
-interface SearchBarProps {
+type SearchBarProps = {
     handleClick?: (param: any) => void;
     type: 'checkbox' | 'onClick';
+    placeholder?: string;
+    searchBarFormId?: string;
 }
 
-export default function SearchBar({ handleClick, type }: SearchBarProps) {
+export default function SearchBar({ handleClick, type, placeholder, searchBarFormId }: SearchBarProps) {
 
     const { user } = useAuthContext();
     const [input, setInput] = useState<string>("");
     const [searchResult, setSearchResult] = useState<userInterface[]>([]);
 
+    useEffect(() => {
+        setInput('')
+    }, [handleClick])
 
     useEffect(() => {
         const debounceTimer = setTimeout(() => {
@@ -47,11 +52,12 @@ export default function SearchBar({ handleClick, type }: SearchBarProps) {
     };
 
     return (
-        <div className="w-full relative">
+        <div className="w-full relative z-10">
+
             <div className="flex items-center gap-2 w-full bg-gray-200 dark:bg-slate-600 rounded-md">
                 <input className="peer [&::-webkit-search-cancel-button]:appearance-none w-11/12 p-1 px-2 rounded-md bg-gray-200 text-orange-500 outline-none dark:bg-slate-600 dark:text-slate-50"
                     type="search"
-                    placeholder="Search"
+                    placeholder={placeholder}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                 />
@@ -61,15 +67,16 @@ export default function SearchBar({ handleClick, type }: SearchBarProps) {
                     </svg>
                 </span>
             </div>
+
             <div className="absolute w-full overflow-y-scroll bg-slate-950/30  backdrop-blur-md rounded-md border-orange-500 mt-2 px-1">
                 {input !== '' ? type === "onClick" ? searchResult.map((user: userInterface) =>
                 (
-                    <div key={user._id} onClick={() => handleClick!(user._id)} className="w-full bg-transparent bg-opacity-30 p-2 rounded-md mt-1 text-slate-50 backdrop-blur-sm flex items-center space-x-4 hover:bg-slate-500 cursor-pointer">
+                    <div key={user._id} onClick={() => handleClick!(user._id)} className="w-full bg-slate-800 bg-opacity-30 p-2 rounded-md mt-1 text-slate-50 backdrop-blur-sm flex items-center space-x-4 hover:bg-slate-500 cursor-pointer z-50">
                         <img className="w-12 h-12 rounded-full" src={user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${user.userAvatar}`} />
                         <p>{user.username}</p>
                     </div>
                 )) : (
-                    <form id="addUserFormFromSearch" onSubmit={handleClick}>
+                    <form id={searchBarFormId} onSubmit={handleClick}>
                         {searchResult.map((user: userInterface) => (
                             <div key={user._id} className="w-full p-2 rounded-md mt-1 text-slate-50 backdrop-blur-sm flex items-center space-x-4 hover:bg-slate-500">
                                 <img className="w-12 h-12 rounded-full" src={user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${user.userAvatar}`} />
@@ -83,6 +90,7 @@ export default function SearchBar({ handleClick, type }: SearchBarProps) {
                 ) : <></>
                 }
             </div>
+            
         </div>
     )
 }

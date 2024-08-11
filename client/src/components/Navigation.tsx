@@ -13,8 +13,8 @@ export default function Navigation() {
 
     return (
         <nav className="h-full">
-            <div className="max-w-fit mx-auto mt-9 pb-2 relative">
-                <img src={user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${user.userAvatar}`} className="w-20 rounded-full" />
+            <div className="max-w-fit mx-auto mt-9 pb-2 text-center">
+                <img src={user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${user.userAvatar}`} className="w-24 rounded-full" />
                 <UploadImage />
             </div>
             <div className="text-orange-500 border-b-2 border-slate-50 pb-3 mb-4 dark:text-slate-50">
