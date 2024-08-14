@@ -9,6 +9,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
 
+import { Toaster } from "@/components/ui/toaster";
+
 function App() {
 
   const { user } = useAuthContext();
@@ -25,6 +27,7 @@ function App() {
                   user ?
                     <ThemeProvider>
                       <ConversationProvider>
+                        <Toaster />
                         <Home />
                       </ConversationProvider>
                     </ThemeProvider>

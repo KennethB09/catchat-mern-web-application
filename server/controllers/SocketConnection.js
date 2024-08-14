@@ -42,6 +42,16 @@ function socketConnection (io) {
             }
         });
 
+        socket.on('checkBlockedUser', async recipientId => {
+            try {
+                const checkBlockedUsers = await User.findById(recipientId);
+
+                socket.emit('recipientBlockedUsers', checkBlockedUsers.blockedUser);
+            } catch (error) {
+                console.error('Error checking blocked user:', error.message);
+            }
+        })
+
         socket.on('private message', async (msg, recipientId, senderId) => {
             // Create a new Message
             const newMessage =  new Message(msg);

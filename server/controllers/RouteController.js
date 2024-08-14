@@ -45,7 +45,7 @@ const getConversation = async (req, res) => {
             participants: {
                 $elemMatch: { user: user_id }
             }
-        }).populate('participants.user', 'username userAvatar email')
+        }).populate('participants.user', 'username userAvatar email blockedUser')
           .populate('messages.sender', 'username userAvatar')
 
         if (conversations.length === 0) {

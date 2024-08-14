@@ -1,6 +1,6 @@
 import { socket } from '../socket';
 // Hooks
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 // Components
 import ConversationList from '../components/ConversationsList';
 import Conversation from "../components/Conversation";
@@ -8,7 +8,7 @@ import Header from '../components/Header';
 import Contacts from '@/components/Contacts';
 // UI Components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Toaster } from "@/components/ui/toaster";
+import { Skeleton } from "@/components/ui/skeleton";
 // Context Hooks
 import { useAuthContext } from '../context/AuthContext';
 import { useConversationContext } from '../context/ConversationContext';
@@ -20,9 +20,12 @@ export default function Home() {
 
     const { user } = useAuthContext();
     const { conversations, dispatch } = useConversationContext();
+    const [isConversationLoading, setIsConversationLoading] = useState(false);
     const [isOnline, setIsOnline] = useState<userInterface[] | null>(null);
+    const [isOnlineLoading, setIsOnlineLoading] = useState(false);
     const [onClickConversation, setOnClickConversation] = useState(false);
     const { toast } = useToastContext();
+    const viewport = useRef<HTMLDivElement>(null);;
 
     // Toggle function to show the Conversation component
     function onClick() {
@@ -39,10 +42,27 @@ export default function Home() {
         socket.emit('group message', newMessage, conversationId);
     };
 
+    function clickedConversation(conversationType: string, recipientUser: userInterface, conversation: ConversationInterface) {
+
+        if (viewport.current!.clientWidth < 640) {
+            onClick();
+        };
+
+        socket.emit('checkBlockedUser', recipientUser._id);
+
+        if (conversationType == 'personal') {
+            dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
+            dispatch({ type: 'SET_USER', payload: recipientUser });
+        } else {
+            dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
+        }
+    };
+
     useEffect(() => {
 
         // Fetch the conversations of the user
         const fetchData = async () => {
+            setIsConversationLoading(true);
             const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/conversations`, {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
@@ -52,6 +72,14 @@ export default function Home() {
 
             if (response.ok) {
                 dispatch({ type: 'SET_CONVERSATIONS', payload: data });
+                setIsConversationLoading(false);
+            } else {
+                toast({
+                    title: "Ops, something went wrong",
+                    description: data.error,
+                    variant: 'destructive'
+                });
+                setIsConversationLoading(false);
             }
         };
 
@@ -66,14 +94,19 @@ export default function Home() {
 
             if (response.ok) {
                 dispatch({ type: 'USER_BLOCKED_USERS', payload: data })
+            } else {
+                toast({
+                    title: "Ops, something went wrong",
+                    description: data.error,
+                    variant: 'destructive'
+                });
             }
         };
 
         if (user) {
             fetchData();
             fetchBlockedUsersData();
-            socket.connect();
-        }
+        };
 
     }, [user]);
 
@@ -89,17 +122,13 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
-        
+
         // Execute when new message received
         function handleMessageReceive(msg: MessagesInterface, conversationId: string) {
-            dispatch({ type: 'UPDATE_CONVERSATIONS', payload: { conversationId: conversationId, newMessage: msg} });
+            dispatch({ type: 'UPDATE_CONVERSATIONS', payload: { conversationId: conversationId, newMessage: msg } });
             dispatch({ type: 'ADD_MESSAGE', payload: msg });
 
-            // Check if the user is inside of conversation
-            // If the onClickConversation is false then it will send a notification
-            if (onClickConversation === false) {
-               return toast({ title: msg.sender.username, description: msg.content, variant: 'default' });
-            }
+            toast({ title: msg.sender.username, description: msg.content, variant: 'default' });
         };
 
         // Listen to the messageReceive event from server
@@ -126,17 +155,18 @@ export default function Home() {
 
         function isOnlineAndJoinChats() {
             socket.emit('isOnline', user.userId);
-            
+            setIsOnlineLoading(true);
         };
 
         socket.on('connect', isOnlineAndJoinChats);
 
         socket.on('onlineContacts', (onlineUsers: userInterface[]) => {
             setIsOnline(onlineUsers);
+            setIsOnlineLoading(false);
         });
 
         return () => {
-           
+
             socket.off('connect', isOnlineAndJoinChats);
             socket.off('onlineContacts');
 
@@ -144,71 +174,102 @@ export default function Home() {
     }, []);
 
     return (
-        <div className='flex flex-col h-screen bg-white dark:bg-slate-950'>
-            <Toaster />
-            <Header onlineUsers={isOnline} onClickUser={onClick} />
+        <div ref={viewport} className='no-scrollbar overflow-scroll flex flex-col h-screen w-screen text-sm sm:p-2 sm:flex-row sm:gap-2 sm:bg-gray-300 sm:dark:bg-gray-800 font-roboto'>
 
-            <Tabs defaultValue='chats' className='relative flex flex-col w-full h-full z-0'>
+            <div className='flex flex-col h-full w-full sm:w-1/2 lg:w-[35%] p-4 sm:p-2 bg-slate-100 dark:bg-slate-950 sm:rounded-bl-md sm:rounded-tl-md'>
+                <Header onlineUsers={isOnline} onClickUser={onClick} isOnlineLoading={isOnlineLoading} />
 
-                <TabsContent value='chats' className='h-full'>
-                    <Tabs defaultValue='personal' className='px-4'>
+                <Tabs defaultValue='chats' className='no-scrollbar overflow-scroll flex flex-col h-full z-0 '>
 
-                        <TabsList className='w-full mb-4 bg-gray-200 dark:bg-slate-600'>
+                    <TabsContent value='chats' className='flex flex-col'>
 
-                            <TabsTrigger value='personal' className='w-1/2 data-[state=active]:bg-orange-500 data-[state=active]:text-slate-50'>Personal</TabsTrigger>
-                            <TabsTrigger value='group' className='w-1/2 data-[state=active]:bg-orange-500 data-[state=active]:text-slate-50'>Group</TabsTrigger>
+                        <Tabs defaultValue='personal' className='h-full no-scrollbar overflow-y-scroll'>
 
-                        </TabsList>
-                        <TabsContent value='personal'>
+                            <TabsList className='w-full mb-4 bg-gray-200 dark:bg-slate-600 font-bold'>
 
-                            {conversations && conversations.map((c: ConversationInterface) => {
-                                return (c.conversationType == 'personal' && (
-                                    <ConversationList key={c._id} conversation={c} onClickConversation={onClick} />)
-                                )
-                            }
-                            )}
+                                <TabsTrigger value='personal' className='w-1/2 data-[state=active]:bg-orange-500 data-[state=active]:text-slate-50'>Personal</TabsTrigger>
+                                <TabsTrigger value='group' className='w-1/2 data-[state=active]:bg-orange-500 data-[state=active]:text-slate-50'>Group</TabsTrigger>
 
-                        </TabsContent>
-                        <TabsContent value='group'>
+                            </TabsList>
 
-                            {conversations && conversations.map((c: ConversationInterface) => {
-                                return (c.conversationType == 'group' && (
-                                    <ConversationList key={c._id} conversation={c} onClickConversation={onClick} />)
-                                )
-                            }
-                            )}
+                            <TabsContent value='personal' className='h-full'>
 
-                        </TabsContent>
+                                {!isConversationLoading ?
+                                    <>
+                                        {conversations && conversations.map((c: ConversationInterface) => {
+                                            return (c.conversationType == 'personal' && (
+                                                <ConversationList key={c._id} conversation={c} onClickConversation={clickedConversation} />)
+                                            )
+                                        }
+                                        )}
+                                    </>
+                                    :
+                                    <>
+                                        {'123456'.split('').map(i => (
+                                            <div key={i} className='flex p-2 max-h-14'>
+                                                <Skeleton className="min-w-12 h-12 rounded-full" />
+                                                <div className='ml-4 flex flex-col justify-between w-full'>
 
-                    </Tabs>
-                </TabsContent>
+                                                    <Skeleton className="w-full h-4 rounded-full" />
 
-                <TabsContent value='contacts' className='h-full'>
+                                                    <div className='grid grid-cols-2 w-full text-slate-500'>
+                                                        <Skeleton className="w-full h-4 rounded-full" />
+                                                        <Skeleton className="w-1/2 h-4 rounded-full ml-auto" />
+                                                    </div>
 
-                    <Contacts />
+                                                </div>
+                                            </div>
+                                        ))
+                                        }
+                                    </>
+                                }
 
-                </TabsContent>
+                            </TabsContent>
+                            <TabsContent value='group'>
 
-                <TabsList className='w-full h-max p-1 rounded-none bg-gray-200 dark:bg-slate-900'>
+                                <div className='h-max'>
+                                    {conversations && conversations.map((c: ConversationInterface) => {
+                                        return (c.conversationType == 'group' && (
+                                            <ConversationList key={c._id} conversation={c} onClickConversation={clickedConversation} />)
+                                        )
+                                    }
+                                    )}
+                                </div>
 
-                    <TabsTrigger value='chats' className='flex flex-col gap-1 w-1/2 data-[state=active]:bg-gray-200 dark:bg-slate-900 data-[state=active]:fill-orange-500 dark:data-[state=active]:fill-orange-500 fill-slate-600 text-slate-600 dark:fill-slate-50 dark:text-slate-50 data-[state=active]:text-orange-500 dark:data-[state=active]:text-orange-500'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 15 15">
-                            <path d="m11.5 13.5l.157-.475l-.218-.072l-.197.119zm2-2l-.421-.27l-.129.202l.076.226zm1 2.99l-.157.476a.5.5 0 0 0 .631-.634zm-3.258-1.418c-.956.575-2.485.919-3.742.919v1c1.385 0 3.106-.37 4.258-1.063zM7.5 13.99c-3.59 0-6.5-2.908-6.5-6.496H0a7.498 7.498 0 0 0 7.5 7.496zM1 7.495A6.498 6.498 0 0 1 7.5 1V0A7.498 7.498 0 0 0 0 7.495zM7.5 1C11.09 1 14 3.908 14 7.495h1A7.498 7.498 0 0 0 7.5 0zM14 7.495c0 1.331-.296 2.758-.921 3.735l.842.54C14.686 10.575 15 8.937 15 7.495zm-2.657 6.48l3 .99l.314-.949l-3-.99zm3.631.357l-1-2.99l-.948.316l1 2.991z" />
-                        </svg>
-                        <small>Chats</small>
-                    </TabsTrigger>
+                            </TabsContent>
 
-                    <TabsTrigger value='contacts' className='flex flex-col gap-1 w-1/2 data-[state=active]:bg-gray-200 dark:bg-slate-900 data-[state=active]:fill-orange-500 dark:data-[state=active]:fill-orange-500 fill-slate-600 text-slate-600 dark:fill-slate-50 dark:text-slate-50 data-[state=active]:text-orange-500 dark:data-[state=active]:text-orange-500'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 15 15">
-                            <path d="M5.5 11.5H5v.5h.5zm5 0v.5h.5v-.5zm-4.5 0V11H5v.5zm4-.5v.5h1V11zm.5 0h-5v1h5zM8 9a2 2 0 0 1 2 2h1a3 3 0 0 0-3-3zm-2 2a2 2 0 0 1 2-2V8a3 3 0 0 0-3 3zm2-8a2 2 0 0 0-2 2h1a1 1 0 0 1 1-1zm2 2a2 2 0 0 0-2-2v1a1 1 0 0 1 1 1zM8 7a2 2 0 0 0 2-2H9a1 1 0 0 1-1 1zm0-1a1 1 0 0 1-1-1H6a2 2 0 0 0 2 2zM3.5 1h9V0h-9zm9.5.5v12h1v-12zM12.5 14h-9v1h9zM3 13.5v-12H2v12zm.5.5a.5.5 0 0 1-.5-.5H2A1.5 1.5 0 0 0 3.5 15zm9.5-.5a.5.5 0 0 1-.5.5v1a1.5 1.5 0 0 0 1.5-1.5zM12.5 1a.5.5 0 0 1 .5.5h1A1.5 1.5 0 0 0 12.5 0zm-9-1A1.5 1.5 0 0 0 2 1.5h1a.5.5 0 0 1 .5-.5zM4 4H1v1h3zm0 6H1v1h3z" />
-                        </svg>
-                        <small>Contacts</small>
-                    </TabsTrigger>
-                </TabsList>
+                        </Tabs>
 
-            </Tabs>
+                    </TabsContent>
 
-            <Conversation onClickConversation={onClickConversation} onClick={onClick} privateMessage={privateMessage} groupMessage={groupMessage}/>
+                    <TabsContent value='contacts' className='h-full'>
+
+                        <Contacts />
+
+                    </TabsContent>
+
+                    <TabsList className='absolute w-1/2 sm:w-[20%] lg:w-[10%] h-max p-1 self-center bottom-7 rounded-xl bg-gray-400 bg-opacity-20 backdrop-blur-sm dark:bg-slate-900 dark:bg-opacity-80 dark:backdrop-blur-sm'>
+
+                        <TabsTrigger value='chats' className='flex flex-col gap-1 w-1/2  dark:data-[state=active]:bg-transparent data-[state=active]:bg-transparent data-[state=active]:fill-orange-500 dark:data-[state=active]:fill-orange-500 fill-slate-600 text-slate-600 dark:fill-slate-50 dark:text-slate-50 data-[state=active]:text-orange-500 dark:data-[state=active]:text-orange-500'>
+                            <svg className='sm:w-5' xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 15 15">
+                                <path d="m11.5 13.5l.157-.475l-.218-.072l-.197.119zm2-2l-.421-.27l-.129.202l.076.226zm1 2.99l-.157.476a.5.5 0 0 0 .631-.634zm-3.258-1.418c-.956.575-2.485.919-3.742.919v1c1.385 0 3.106-.37 4.258-1.063zM7.5 13.99c-3.59 0-6.5-2.908-6.5-6.496H0a7.498 7.498 0 0 0 7.5 7.496zM1 7.495A6.498 6.498 0 0 1 7.5 1V0A7.498 7.498 0 0 0 0 7.495zM7.5 1C11.09 1 14 3.908 14 7.495h1A7.498 7.498 0 0 0 7.5 0zM14 7.495c0 1.331-.296 2.758-.921 3.735l.842.54C14.686 10.575 15 8.937 15 7.495zm-2.657 6.48l3 .99l.314-.949l-3-.99zm3.631.357l-1-2.99l-.948.316l1 2.991z" />
+                            </svg>
+                            <small className='sm:text-xs'>Chats</small>
+                        </TabsTrigger>
+
+                        <TabsTrigger value='contacts' className='flex flex-col gap-1 w-1/2 dark:data-[state=active]:bg-transparent data-[state=active]:bg-transparent data-[state=active]:fill-orange-500 dark:data-[state=active]:fill-orange-500 fill-slate-600 text-slate-600 dark:fill-slate-50 dark:text-slate-50 data-[state=active]:text-orange-500 dark:data-[state=active]:text-orange-500'>
+                            <svg className='sm:w-5' xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 15 15">
+                                <path d="M5.5 11.5H5v.5h.5zm5 0v.5h.5v-.5zm-4.5 0V11H5v.5zm4-.5v.5h1V11zm.5 0h-5v1h5zM8 9a2 2 0 0 1 2 2h1a3 3 0 0 0-3-3zm-2 2a2 2 0 0 1 2-2V8a3 3 0 0 0-3 3zm2-8a2 2 0 0 0-2 2h1a1 1 0 0 1 1-1zm2 2a2 2 0 0 0-2-2v1a1 1 0 0 1 1 1zM8 7a2 2 0 0 0 2-2H9a1 1 0 0 1-1 1zm0-1a1 1 0 0 1-1-1H6a2 2 0 0 0 2 2zM3.5 1h9V0h-9zm9.5.5v12h1v-12zM12.5 14h-9v1h9zM3 13.5v-12H2v12zm.5.5a.5.5 0 0 1-.5-.5H2A1.5 1.5 0 0 0 3.5 15zm9.5-.5a.5.5 0 0 1-.5.5v1a1.5 1.5 0 0 0 1.5-1.5zM12.5 1a.5.5 0 0 1 .5.5h1A1.5 1.5 0 0 0 12.5 0zm-9-1A1.5 1.5 0 0 0 2 1.5h1a.5.5 0 0 1 .5-.5zM4 4H1v1h3zm0 6H1v1h3z" />
+                            </svg>
+                            <small className='sm:text-xs'>Contacts</small>
+                        </TabsTrigger>
+
+                    </TabsList>
+
+                </Tabs>
+            </div>
+
+            <Conversation onClickConversation={onClickConversation} onClick={onClick} privateMessage={privateMessage} groupMessage={groupMessage} />
 
         </div>
     );

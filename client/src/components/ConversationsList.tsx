@@ -1,24 +1,23 @@
 // Context
-import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from '../context/AuthContext';
 
 import { format } from 'date-fns';
 // Assets
 import blankAvatar from '../assets/avatar/blank avatar.jpg'
 // Interfaces
-import { ConversationInterface, participantsInterface } from '../ts/interfaces/Conversation_interface';
+import { ConversationInterface, participantsInterface, userInterface } from '../ts/interfaces/Conversation_interface';
 
 interface ConversationListProps {
   conversation: ConversationInterface;
-  onClickConversation: () => void;
+  onClickConversation: (conversationType: string, recipientUser: userInterface, conversation: ConversationInterface) => void;
 }
 
 export default function ConversationList({ conversation, onClickConversation }: ConversationListProps) {
 
-  const { dispatch } = useConversationContext();
   const { user } = useAuthContext();
+  const conversationType = conversation.conversationType;
 
-  const username: participantsInterface[] = conversation.participants.filter(participant => participant.user._id !== user.userId);
+  const recipientUser: participantsInterface[] = conversation.participants.filter(participant => participant.user._id !== user.userId);
 
   const newMessage = conversation.messages?.sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -27,15 +26,7 @@ export default function ConversationList({ conversation, onClickConversation }: 
   const avatar = conversation.participants.filter(u => u.user._id.toString() !== user.userId.toString());
 
   function conversationClick() {
-
-    onClickConversation();
-
-    if (conversation.conversationType == 'personal') {
-      dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
-      dispatch({ type: 'SET_USER', payload: username[0].user });
-    } else {
-      dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
-    }
+    onClickConversation(conversationType, recipientUser[0].user, conversation);
   };
 
   return (
@@ -47,7 +38,7 @@ export default function ConversationList({ conversation, onClickConversation }: 
           </div>
           <div className='ml-4 w-full'>
             <div className='text-orange-500 dark:text-slate-50'>
-              <strong>{username[0].user.username}</strong>
+              <strong>{recipientUser[0].user.username}</strong>
             </div>
             {newMessage![0] && (
               <div className='grid grid-cols-2 w-full text-slate-500'>

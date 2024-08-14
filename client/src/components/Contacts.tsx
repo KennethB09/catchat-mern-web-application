@@ -39,7 +39,7 @@ function Contacts() {
         return (
           <div key={c._id} className='flex items-center py-2 gap-3 h-14 hover:bg-gray-200 dark:hover:bg-slate-800 cursor-pointer'>
             <img className="w-10 h-10 rounded-full" src={c.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${c.userAvatar}`} alt={c.username} />
-            <h1>{c.username}</h1>
+            <h1 className='text-orange-500 dark:text-slate-50'>{c.username}</h1>
           </div>
         )
       })}

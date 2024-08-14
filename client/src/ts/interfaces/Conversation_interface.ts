@@ -3,7 +3,8 @@ export interface userInterface {
     username: string;
     userAvatar: string | null;
     email?: string
-    userStatus?: string
+    blockedUser?: string[] | null;
+    userStatus?: string;
 }
 
 export interface participantsInterface {

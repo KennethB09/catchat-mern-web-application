@@ -16,8 +16,9 @@ export default function Login() {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className='flex flex-col'>
             <input
+                className=''
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

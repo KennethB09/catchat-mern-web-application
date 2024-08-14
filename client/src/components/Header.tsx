@@ -4,12 +4,11 @@ import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from "../context/AuthContext";
 
 import { userInterface, ConversationInterface } from "../ts/interfaces/Conversation_interface";
-
+// Components
 import SearchBar from "./SearchBar";
 import Navigation from "./Navigation";
 import blankAvatar from '../assets/avatar/blank avatar.jpg';
 import CreateGroup from "./CreateConversation";
-
 // UI component
 import {
     Sheet,
@@ -19,6 +18,7 @@ import {
     SheetClose,
     SheetTrigger,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface dataInterface {
     conversation: ConversationInterface;
@@ -26,11 +26,12 @@ interface dataInterface {
 }
 
 interface HeaderProps {
+    isOnlineLoading: boolean;
     onlineUsers: userInterface[] | null;
     onClickUser: () => void;
 }
 
-export default function Header({ onlineUsers, onClickUser }: HeaderProps) {
+export default function Header({ onlineUsers, onClickUser, isOnlineLoading }: HeaderProps) {
 
     const { user } = useAuthContext();
     const { dispatch } = useConversationContext();
@@ -64,7 +65,7 @@ export default function Header({ onlineUsers, onClickUser }: HeaderProps) {
 
     return (
         <header className="">
-            <div className="p-4">
+            <div className="">
 
                 <div className="flex pb-4">
                     <Sheet>
@@ -79,7 +80,7 @@ export default function Header({ onlineUsers, onClickUser }: HeaderProps) {
                                 <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z" />
                             </svg>
                         </SheetTrigger>
-                        <SheetContent side='left' className="dark:bg-gray-800 border-none">
+                        <SheetContent side='left' className="flex flex-col dark:bg-gray-800 border-none">
                             <Navigation />
                         </SheetContent>
                     </Sheet>
@@ -110,13 +111,25 @@ export default function Header({ onlineUsers, onClickUser }: HeaderProps) {
 
                 <SearchBar handleClick={handleClick} type='onClick' placeholder='Search' />
 
-                <div className="pt-4 flex gap-2 overflow-y-scroll">
-                    {onlineUsers && onlineUsers.map(users => (
-                        <div key={users._id}>
-                            <img className="w-12 h-12 rounded-full border-solid border-orange-500 border-2" src={users.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${users.userAvatar}`} alt={users.username} />
-                        </div>
-                    ))}
-                </div>
+                {!isOnlineLoading ?
+                    <div className="pt-4 pb-2 flex flex-row gap-3 no-scrollbar overflow-x-scroll h-min w-full">
+                        {onlineUsers && onlineUsers.map(users => (
+                            <div key={users._id}>
+                                <img className="w-12 h-12 rounded-full border-solid border-orange-500 border-2" src={users.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${users.userAvatar}`} alt={users.username} />
+                            </div>
+                        ))}
+                    </div>
+                    :
+                    <div className="pt-4 pb-2 flex flex-row gap-3 no-scrollbar overflow-x-scroll h-min w-full">
+                        <Skeleton className="min-w-12 h-12 rounded-full" />
+                        <Skeleton className="min-w-12 h-12 rounded-full" />
+                        <Skeleton className="min-w-12 h-12 rounded-full" />
+                        <Skeleton className="min-w-12 h-12 rounded-full" />
+                        <Skeleton className="min-w-12 h-12 rounded-full" />
+                        <Skeleton className="min-w-12 h-12 rounded-full" />
+                        <Skeleton className="min-w-12 h-12 rounded-full" />
+                    </div>
+                }
 
             </div>
 

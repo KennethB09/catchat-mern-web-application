@@ -57,7 +57,7 @@ export default function CreateGroup({ createGroup, toggleState }: CreateGroupPro
                     onChange={e => setGroupName(e.target.value)}
                 />
             </div>
-            <SearchBar type="checkbox" handleClick={handleClick} searchBarFormId='createGroup' />
+            <SearchBar type="checkbox" handleClick={handleClick} searchBarFormId='createGroup' placeholder="Add user"/>
         </div>
     )
 }
