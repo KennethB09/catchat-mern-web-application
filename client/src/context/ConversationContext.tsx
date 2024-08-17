@@ -13,6 +13,7 @@ type ConversationAction =
   | { type: 'USER_BLOCKED_USERS'; payload: userInterface[] }
   | { type: 'BLOCK_USER'; payload: userInterface }
   | { type: 'UNBLOCK_USER'; payload: userInterface }
+  | { type: 'NEW_CONVERSATION'; payload: ConversationInterface }
 
 type ConversationContextType = {
   conversations: ConversationInterface[] | null;
@@ -80,6 +81,11 @@ export const conversationReducer = (state: UserConversation, action: Conversatio
       return {
         ...state,
         blockedUsers: state.blockedUsers!.filter(u => u._id!== action.payload._id)
+      }
+    case 'NEW_CONVERSATION':
+      return {
+       ...state,
+        conversations: [action.payload, ...state.conversations!]
       }
     default:
       return state;

@@ -20,16 +20,19 @@ export default function Home() {
 
     const { user } = useAuthContext();
     const { conversations, dispatch } = useConversationContext();
+    const [isLoading, setIsLoading] = useState(false);
     const [isConversationLoading, setIsConversationLoading] = useState(false);
     const [isOnline, setIsOnline] = useState<userInterface[] | null>(null);
     const [isOnlineLoading, setIsOnlineLoading] = useState(false);
     const [onClickConversation, setOnClickConversation] = useState(false);
+    const [currentConversation, setCurrentConversation] = useState('');
     const { toast } = useToastContext();
-    const viewport = useRef<HTMLDivElement>(null);;
+    const viewport = useRef<HTMLDivElement>(null);
 
     // Toggle function to show the Conversation component
     function onClick() {
         setOnClickConversation(prev => !prev);
+        setCurrentConversation('');
     };
 
     // Function to send a private message
@@ -42,20 +45,22 @@ export default function Home() {
         socket.emit('group message', newMessage, conversationId);
     };
 
-    function clickedConversation(conversationType: string, recipientUser: userInterface, conversation: ConversationInterface) {
+    function clickedConversation(conversationType: string, recipientUser: userInterface | undefined, conversation: ConversationInterface) {
 
         if (viewport.current!.clientWidth < 640) {
             onClick();
         };
 
-        socket.emit('checkBlockedUser', recipientUser._id);
+        socket.emit('checkBlockedUser', recipientUser?._id);
 
         if (conversationType == 'personal') {
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
-            dispatch({ type: 'SET_USER', payload: recipientUser });
+            dispatch({ type: 'SET_USER', payload: recipientUser! });
+            setCurrentConversation(conversation._id);
         } else {
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
-        }
+            setCurrentConversation(conversation._id);
+        } 
     };
 
     useEffect(() => {
@@ -120,30 +125,62 @@ export default function Home() {
             socket.disconnect();
         }
     }, []);
-
+    
     useEffect(() => {
+
+        function newRoom(conversation: ConversationInterface) {
+            console.log('working')
+            dispatch({ type: 'NEW_CONVERSATION', payload: conversation});
+            dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
+            toast({
+                title: 'Room created',
+                description: 'You and this user are now connected',
+                variant: 'default'
+            });
+        };
+
+        function newConversation(msg: MessagesInterface, conversation: ConversationInterface) {
+            toast({
+                title: 'Someone send you a message',
+                description: msg.content,
+                variant: 'default'
+            });
+            dispatch({ type: 'NEW_CONVERSATION', payload: conversation});
+            dispatch({ type: 'ADD_MESSAGE', payload: msg });
+        };
 
         // Execute when new message received
         function handleMessageReceive(msg: MessagesInterface, conversationId: string) {
             dispatch({ type: 'UPDATE_CONVERSATIONS', payload: { conversationId: conversationId, newMessage: msg } });
-            dispatch({ type: 'ADD_MESSAGE', payload: msg });
 
-            toast({ title: msg.sender.username, description: msg.content, variant: 'default' });
+            if(currentConversation === conversationId) {
+                dispatch({ type: 'ADD_MESSAGE', payload: msg });
+            } else {
+                toast({ title: msg.sender.username, description: msg.content, variant: 'default' });
+            }
         };
+
+        socket.on('room_created', newRoom);
+
+        socket.on('message_request', newConversation);
 
         // Listen to the messageReceive event from server
         socket.on('messageReceive', handleMessageReceive);
 
         return () => {
+            socket.off('room_created', newRoom);
+            socket.off('message_request', newConversation);
             socket.off('messageReceive', handleMessageReceive);
         };
-    }, []);
+
+    }, [currentConversation, socket.on]);
 
     // Emit the Ids of user conversation to server
     // And the server will convert the Ids to room names
     useEffect(() => {
 
         const conversationIds = conversations?.map(c => c._id)
+        conversationIds?.push(user.userId);
         socket.emit('join conversations', conversationIds);
 
     }, [conversations]);
@@ -171,13 +208,21 @@ export default function Home() {
             socket.off('onlineContacts');
 
         };
-    }, []);
+    }, [socket.connect()]);
 
     return (
-        <div ref={viewport} className='no-scrollbar overflow-scroll flex flex-col h-screen w-screen text-sm sm:p-2 sm:flex-row sm:gap-2 sm:bg-gray-300 sm:dark:bg-gray-800 font-roboto'>
+        <div ref={viewport} className='relative no-scrollbar overflow-scroll flex flex-col h-screen w-screen text-sm sm:p-2 sm:flex-row sm:gap-2 sm:bg-gray-300 sm:dark:bg-gray-800 font-roboto'>
+
+            {isLoading &&
+                <span className='absolute w-full h-full right-0 self-center flex flex-col items-center justify-center top-0 bg-gray-700 bg-opacity-10 z-50'>
+                    <svg className='fill-orange-500' xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" /><path fill="" d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"><animateTransform attributeName="transform" dur="1.125s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" /></path>
+                    </svg>
+                </span>
+            }
 
             <div className='flex flex-col h-full w-full sm:w-1/2 lg:w-[35%] p-4 sm:p-2 bg-slate-100 dark:bg-slate-950 sm:rounded-bl-md sm:rounded-tl-md'>
-                <Header onlineUsers={isOnline} onClickUser={onClick} isOnlineLoading={isOnlineLoading} />
+                <Header onlineUsers={isOnline} onClickUser={onClick} isOnlineLoading={isOnlineLoading} clickedConversation={clickedConversation} setIsLoading={setIsLoading}/>
 
                 <Tabs defaultValue='chats' className='no-scrollbar overflow-scroll flex flex-col h-full z-0 '>
 
@@ -198,7 +243,7 @@ export default function Home() {
                                     <>
                                         {conversations && conversations.map((c: ConversationInterface) => {
                                             return (c.conversationType == 'personal' && (
-                                                <ConversationList key={c._id} conversation={c} onClickConversation={clickedConversation} />)
+                                                <ConversationList key={c._id} conversation={c} onClickConversation={clickedConversation}/>)
                                             )
                                         }
                                         )}
@@ -207,14 +252,14 @@ export default function Home() {
                                     <>
                                         {'123456'.split('').map(i => (
                                             <div key={i} className='flex p-2 max-h-14'>
-                                                <Skeleton className="min-w-12 h-12 rounded-full" />
+                                                <Skeleton className="bg-slate-300 dark:bg-slate-800 min-w-12 h-12 rounded-full" />
                                                 <div className='ml-4 flex flex-col justify-between w-full'>
 
-                                                    <Skeleton className="w-full h-4 rounded-full" />
+                                                    <Skeleton className="bg-slate-300 dark:bg-slate-800 w-full h-4 rounded-full" />
 
                                                     <div className='grid grid-cols-2 w-full text-slate-500'>
-                                                        <Skeleton className="w-full h-4 rounded-full" />
-                                                        <Skeleton className="w-1/2 h-4 rounded-full ml-auto" />
+                                                        <Skeleton className="bg-slate-300 dark:bg-slate-800 w-full h-4 rounded-full" />
+                                                        <Skeleton className="bg-slate-300 dark:bg-slate-800 w-1/2 h-4 rounded-full ml-auto" />
                                                     </div>
 
                                                 </div>
@@ -230,7 +275,7 @@ export default function Home() {
                                 <div className='h-max'>
                                     {conversations && conversations.map((c: ConversationInterface) => {
                                         return (c.conversationType == 'group' && (
-                                            <ConversationList key={c._id} conversation={c} onClickConversation={clickedConversation} />)
+                                            <ConversationList key={c._id} conversation={c} onClickConversation={clickedConversation}/>)
                                         )
                                     }
                                     )}

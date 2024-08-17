@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 
-import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from "../context/AuthContext";
 
 import { userInterface, ConversationInterface } from "../ts/interfaces/Conversation_interface";
@@ -27,14 +26,15 @@ interface dataInterface {
 
 interface HeaderProps {
     isOnlineLoading: boolean;
+    setIsLoading: Dispatch<SetStateAction<boolean>>;
     onlineUsers: userInterface[] | null;
     onClickUser: () => void;
+    clickedConversation: (conversationType: string, recipientUser: userInterface | undefined, conversation: ConversationInterface) => void;
 }
 
-export default function Header({ onlineUsers, onClickUser, isOnlineLoading }: HeaderProps) {
+export default function Header({ onlineUsers, setIsLoading, onClickUser, isOnlineLoading, clickedConversation }: HeaderProps) {
 
     const { user } = useAuthContext();
-    const { dispatch } = useConversationContext();
     const [toggle, setToggle] = useState(false);
 
     function onClick() {
@@ -42,7 +42,7 @@ export default function Header({ onlineUsers, onClickUser, isOnlineLoading }: He
     };
 
     const handleClick = async (userId: string) => {
-
+        setIsLoading(true);
         const users = { userId, currentUserId: user.userId }
 
         const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/conversation`, {
@@ -55,11 +55,10 @@ export default function Header({ onlineUsers, onClickUser, isOnlineLoading }: He
         });
 
         const json: dataInterface = await response.json();
-        console.log(json)
+
         if (response.ok) {
-            onClickUser()
-            dispatch({ type: 'SET_CLICK_CONVERSATION', payload: json.conversation });
-            dispatch({ type: 'SET_USER', payload: json.user });
+            setIsLoading(false);
+            clickedConversation('personal', json.user, json.conversation);
         };
     };
 
@@ -121,13 +120,9 @@ export default function Header({ onlineUsers, onClickUser, isOnlineLoading }: He
                     </div>
                     :
                     <div className="pt-4 pb-2 flex flex-row gap-3 no-scrollbar overflow-x-scroll h-min w-full">
-                        <Skeleton className="min-w-12 h-12 rounded-full" />
-                        <Skeleton className="min-w-12 h-12 rounded-full" />
-                        <Skeleton className="min-w-12 h-12 rounded-full" />
-                        <Skeleton className="min-w-12 h-12 rounded-full" />
-                        <Skeleton className="min-w-12 h-12 rounded-full" />
-                        <Skeleton className="min-w-12 h-12 rounded-full" />
-                        <Skeleton className="min-w-12 h-12 rounded-full" />
+                        {'1234567'.split('').map(i => (
+                            <Skeleton key={i} className="bg-slate-300 dark:bg-slate-800 min-w-12 h-12 rounded-full" />
+                        ))}
                     </div>
                 }
 

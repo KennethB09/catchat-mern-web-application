@@ -37,8 +37,10 @@ export default function CreateGroup({ createGroup, toggleState }: CreateGroupPro
 
         const json = await response.json();
         if (response.ok) {
-            toggleState()
-            createGroup();
+            if (window.innerWidth < 640) {
+                createGroup();
+            }
+            toggleState();
             dispatch({ type: 'ADD_MESSAGE', payload: json.messages });
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: json })
         };
@@ -47,10 +49,10 @@ export default function CreateGroup({ createGroup, toggleState }: CreateGroupPro
     return (
         <div className=''>
             <Button form='createGroup' type="submit" variant={'default'} className="absolute right-4 top-4 p-3 h-8 bg-orange-500 text-slate-50">Create</Button>
-            <div className='py-4'>
+            <div className='flex items-center gap-4 py-4'>
                 <label htmlFor="createGroupInput" className="font-semibold text-orange-500 dark:text-slate-50">Group name: </label>
                 <input
-                    className='p-1 border-b-2 border-orange-500 rounded-tr-sm rounded-tl-sm bg-gray-200 dark:bg-slate-600'
+                    className='p-1 border-b-2 border-orange-500 bg-transparent focus-within:outline-none'
                     id="createGroupInput"
                     type='text'
                     value={groupName}

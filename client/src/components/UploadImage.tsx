@@ -3,15 +3,22 @@ import ImageUploading, { ImageListType } from "react-images-uploading";
 import Cropper from "react-easy-crop";
 import { useAuthContext } from "../context/AuthContext";
 import { getCroppedImg } from '../utility/cropImage';
+import { useToastContext } from '@/hooks/useToast';  
 
 interface CroppedAreaPixels {
   x: number;
   y: number;
 }
 
-export default function UploadImage() {
+type UploadImageProps = {
+  userIdOrConversationId: string | undefined;
+  uploadPurpose: 'change_user_avatar' | 'change_group_image';
+}
+
+export default function UploadImage({ uploadPurpose, userIdOrConversationId }: UploadImageProps) {
 
   const { user, dispatch } = useAuthContext();
+  const { toast } = useToastContext();
   const maxNumber = 69;
   const [image, setImage] = useState<ImageListType | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -26,16 +33,24 @@ export default function UploadImage() {
         'Authorization': `Bearer ${user.token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ userId: user.userId, purpose: 'change/upload avatar', image: croppedImage })
+      body: JSON.stringify({ userIdOrConversationId, purpose: uploadPurpose, image: croppedImage })
     });
 
     const json = await response.json();
 
     if (response.ok) {
-      console.log(json)
+      toast({
+        title: 'Image Uploaded',
+        description: json.message,
+        variant:'default'
+      })
     }
     else {
-      console.log('Error uploading image')
+      toast({
+        title: "Ops, something when't wrong",
+        description: json.message,
+        variant: 'destructive'
+      })
     }
   };
 
@@ -51,10 +66,12 @@ export default function UploadImage() {
       );
       // Here you can send croppedImage to your backend
       handleImageUpload(croppedImage);
-      // Update the user avatar in local storage
-      user.userAvatar = croppedImage.split(',')[1];
-      localStorage.setItem('user', JSON.stringify(user));
-      dispatch({ type: 'UPDATE_LOCAL', payload: user });
+      if (uploadPurpose === 'change_user_avatar') {
+        // Update the user avatar in local storage
+        user.userAvatar = croppedImage.split(',')[1];
+        localStorage.setItem('user', JSON.stringify(user));
+        dispatch({ type: 'UPDATE_LOCAL', payload: user });
+      }
       // Reset the value of image to null
       setImage(null);
     } catch (e) {

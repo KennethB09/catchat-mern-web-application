@@ -8,6 +8,7 @@ const {
     createNewGroup,
     addGroupMember,
     getUserBlockedUsers,
+    removeGroupMember,
     leaveGroup,
     blockUser,
     unBlockUser
@@ -33,6 +34,8 @@ router.post('/post-image', postImageOrAvatar);
 router.patch('/conversation-add-group-member', addGroupMember);
 
 router.get('/user-blocked-users', getUserBlockedUsers);
+
+router.patch('/conversation-remove-group-member', removeGroupMember);
 
 router.patch('/conversation-leave-group', leaveGroup);
 

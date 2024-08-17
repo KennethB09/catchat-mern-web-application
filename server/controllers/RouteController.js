@@ -20,13 +20,14 @@ const searchUser = async (req, res) => {
 };
 
 const getConversationOrStartNew = async (req, res) => {
-    const { currentUserId, userId } = req.body;
+    const { userId, currentUserId } = req.body;
 
     const findConversation = await Conversation.findOne({
         participants: { $all: [
             { $elemMatch: { user: currentUserId} },
             { $elemMatch: { user: userId } }
-        ]}
+        ]},
+        conversationType: "personal"
     }).populate('participants.user', 'username userAvatar email').populate('messages.sender', 'username userAvatar')
 
     const findUser = await User.findById(userId);
@@ -45,8 +46,8 @@ const getConversation = async (req, res) => {
             participants: {
                 $elemMatch: { user: user_id }
             }
-        }).populate('participants.user', 'username userAvatar email blockedUser')
-          .populate('messages.sender', 'username userAvatar')
+        }).populate('participants.user', 'username userAvatar email blockedUser userStatus')
+          .populate('messages.sender', 'username userAvatar').sort({ timestamps: -1 })
 
         if (conversations.length === 0) {
             return res.status(200).json(conversations);
@@ -73,19 +74,31 @@ const getContacts = async (req, res) => {
 };
 
 const postImageOrAvatar = async (req, res) => {
-    const { userId, image, purpose } = req.body;
+    const { userIdOrConversationId, image, purpose } = req.body;
     const extractImage = image.split(',')[1]
 
     try {
-        await User.updateOne({
-            _id: userId
-        }, {
-            $set: {
-                userAvatar: extractImage
-            }
-        });
+        if(purpose === 'change_user_avatar') {
+            await User.updateOne({
+                _id: userIdOrConversationId
+            }, {
+                $set: {
+                    userAvatar: extractImage
+                }
+            });
+        }
+
+        if(purpose === 'change_group_image') {
+            await Conversation.updateOne({
+                _id: userIdOrConversationId
+            }, {
+                $set: {
+                    groupAvatar: extractImage
+                }
+            });
+        }
         
-        res.json({userId, extractImage, purpose})
+        res.json({ message: 'Image updated' })
     } catch (error) {
         console.log(error.message)
         res.status(400).json({ error: error.message })
@@ -133,7 +146,9 @@ const createNewGroup = async (req, res) => {
             }
         );
 
-        res.status(200).json(newConversation);
+        const findGroup = await Conversation.findOne({ _id: newConversation._id }).populate('participants.user', 'username userAvatar email blockedUser userStatus').populate('messages.sender', 'username userAvatar');
+
+        res.status(200).json(findGroup);
     } catch (error) {
         console.error('Error creating group:', error);
         res.status(500).json({ message: 'An error occurred while creating the group' });
@@ -152,10 +167,36 @@ const addGroupMember = async (req, res) => {
             { new: true }
         );
 
+        await User.updateMany({ _id: newMembers }, {
+            $push: { conversations: groupId }
+        });
+
      res.status(200).json({ message: 'New members added' })
     } catch (error) {
         console.error('Error adding group member:', error);
         res.status(500).json({ message: 'An error occurred while adding a group member' });
+    }
+};
+
+const removeGroupMember = async (req, res) => {
+    const { groupId, memberId } = req.body;
+    try {
+        await Conversation.updateOne({
+                _id: groupId
+            },
+            {
+                $pull: { participants: { user: memberId } }
+            }
+        );
+
+        await User.updateMany({ _id: memberId }, {
+            $pull: { conversations: groupId }
+        });
+
+        res.status(200).json({ message: `You successfully removed ${memberId.length} users` })
+    } catch (error) {
+        console.error('Error removing group member:', error);
+        res.status(500).json({ message: 'An error occurred while removing a group member' });
     }
 };
 
@@ -239,6 +280,7 @@ module.exports = {
     postImageOrAvatar,
     createNewGroup,
     addGroupMember,
+    removeGroupMember,
     leaveGroup,
     getUserBlockedUsers,
     blockUser,

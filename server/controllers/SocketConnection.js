@@ -11,7 +11,7 @@ function socketConnection (io) {
         socket.on('join conversations', (conversationIds) => {
 
             socket.join(conversationIds);
-            console.log('joined', conversationIds)
+            
         });
 
         socket.on('isOnline', async (userId) => {
@@ -105,9 +105,27 @@ function socketConnection (io) {
                             }
                         }
                     );
+                    
+                    const conversation = await Conversation.findOne({
+                        participants: {
+                             $all: [
+                                { $elemMatch: { user: senderId } },
+                                { $elemMatch: { user: recipientId } }
+                            ] 
+                        },
+                        conversationType: "personal"
+                    }).populate('participants.user', 'username userAvatar').populate('messages.sender', 'username userAvatar');
+                      
+                    // Join the sender to new conversation room
+                    socket.join(conversation._id.toString());
+                    // This somehow work, it able to emit the event to sender without notifying the other users
+                    // If you want to emit an event to user itself, just call socket emit. Because .to prevent
+                    // the sender to receive the event
+                    socket.emit('room_created', conversation);
 
-                    socket.join(newConversation._id.toString())
-                    return socket.to(newConversation._id.toString()).emit('messageReceive', msg);
+                    socket.to(recipientId).emit('message_request', msg, conversation);
+
+                    return
                 };
 
                 await conversation.updateOne({ $push: { messages: newMessage } });
@@ -129,7 +147,7 @@ function socketConnection (io) {
 
                 await conversation.updateOne({ $push: { messages: newMessage } });
 
-                socket.to(conversation._id.toString()).emit('messageReceive', msg);
+                socket.to(groupId).emit('messageReceive', msg, groupId);
 
             } catch (error) {
                 console.error('Error sending private message:', error.message)

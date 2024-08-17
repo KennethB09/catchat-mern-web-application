@@ -91,6 +91,11 @@ export default function Conversation({ onClickConversation, onClick, privateMess
             privateMessage(newMessage, recipientUser!._id, user.userId);
             setMessage('');
 
+            const messages_container = document.getElementById('messages_container');
+            const message_notice = document.createElement('p');
+            message_notice.className = 'text-slate-orange-500 dark:text-slate-50 text-center';
+            message_notice.textContent = 'You started a conversation.';
+            messages_container?.appendChild(message_notice);
         }
     };
 
@@ -128,8 +133,20 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             <>
                                 <img className="w-10 h-10 rounded-full" src={recipientUser?.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${recipientUser?.userAvatar}`} />
 
-                                <div className="flex content-center text-orange-500 dark:text-slate-50">
+                                <div className="flex flex-col content-center text-orange-500 dark:text-slate-50">
                                     <strong>{recipientUser?.username}</strong>
+                                    <div className={`${recipientUser?.userStatus === 'online' ? 'text-green-500' : 'text-red-500'} flex items-center gap-1 h-min`}>
+                                        <svg className={`${recipientUser?.userStatus === 'online' ? 'fill-green-500' : 'fill-red-500'} w-2 h-2`} viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                            </g>
+                                            <g id="SVGRepo_iconCarrier">
+                                                <circle cx="6" cy="6" r="6" >
+                                                </circle>
+                                            </g>
+                                        </svg>
+                                        <small className={recipientUser?.userStatus === 'online' ? 'text-green-500' : 'text-red-500'}>{recipientUser?.userStatus}</small>
+                                    </div>
                                 </div>
                             </>
                             :
@@ -153,7 +170,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                     <path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z" />
                                 </svg>
                             </SheetTrigger>
-                            <SheetContent side='right' className="flex flex-col bg-slate-100 dark:bg-gray-800 border-none w-full">
+                            <SheetContent side='right' className="flex flex-col bg-slate-100 dark:bg-slate-950 border-none w-full">
                                 <SheetClose onClick={onSheetOpen}>
                                     <svg className="fill-orange-600 opacity-70 transition-opacity hover:opacity-100" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
                                         <path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z" />
@@ -165,7 +182,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     </div>
                 </div>
                 {/* Messages container */}
-                <div ref={newMessageRef} className={`flex flex-col overflow-y-auto no-scrollbar mt-auto px-4`}>
+                <div id="messages_container" ref={newMessageRef} className={`flex flex-col overflow-y-auto no-scrollbar mt-auto px-4`}>
                     {conversation?.conversationType == 'personal' ?
                         <>
                             {sortMessages && sortMessages.map((m, i) =>
@@ -188,13 +205,13 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             {sortMessages && sortMessages.map((m, i) =>
                                 <div key={i}>
                                     {m.sender._id === user.userId ?
-                                        <div className="ml-10">
-                                            <p className={'bg-orange-500 break-all w-fit text-wrap ml-auto left-0 p-2 my-[2px] rounded-bl-lg rounded-tl-lg rounded-tr-lg'}>{m.content}</p>
+                                        <div className={`ml-32`}>
+                                            <p className={`text-slate-50 bg-orange-500 break-all w-fit text-wrap ml-auto left-0 p-2 my-[2px] rounded-bl-xl rounded-br-sm rounded-tl-xl rounded-tr-xl`}>{m.content}</p>
                                         </div>
                                         :
-                                        <div className="flex gap-1">
+                                        <div className="flex gap-3">
                                             <img className="w-6 h-6 rounded-full mt-auto" src={m.sender.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${m.sender.userAvatar}`} />
-                                            <p key={i} className={'bg-orange-500 break-all text-wrap text-right mr-auto w-fit max-w-64 p-2 my-[2px] rounded-br-lg rounded-tl-lg rounded-tr-lg'}>{m.content}</p>
+                                            <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl'}>{m.content}</p>
                                         </div>
                                     }
                                 </div>
@@ -209,7 +226,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     </div>
                     :
                     <form onSubmit={handleSubmit} className="flex justify-between items-center gap-2 h-13 px-4 py-2 mt-3 bg-white dark:bg-slate-900 w-full sm:dark:bg-gray-800">
-                        <textarea className="w-full rounded-lg px-2 h-7 text-wrap text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
+                        <textarea className="w-full rounded-lg px-2 py-1 h-7 text-wrap text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
                             placeholder="Message"
                             value={message}
                             onChange={e => setMessage(e.target.value)}

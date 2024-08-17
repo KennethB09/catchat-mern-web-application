@@ -2,8 +2,7 @@ import { Button } from "@/components/ui/button";
 
 import SearchBar from "./SearchBar";
 
-import { useToast } from "@/components/ui/use-toast";
-import { Toaster } from "@/components/ui/toaster";
+import { useToastContext } from '@/hooks/useToast';
 
 import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from '../context/AuthContext';
@@ -16,7 +15,7 @@ function AddMembers({ onClick }: addMembersProps) {
 
   const { conversation } = useConversationContext();
   const { user } = useAuthContext();
-  const { toast } = useToast();
+  const { toast } = useToastContext();
   const customFormId = 'addMember';
 
   const handleClick = async (e: React.FocusEvent<HTMLFormElement>) => {
@@ -43,7 +42,8 @@ function AddMembers({ onClick }: addMembersProps) {
       onClick()
       toast({
         title: 'Users Added',
-        description: json.message
+        description: json.message,
+        variant: 'default'
       })
     };
     if (!response.ok) {
@@ -53,13 +53,11 @@ function AddMembers({ onClick }: addMembersProps) {
         description: json.message
       })
     }
-};
+  };
   return (
-    <div className=''>
-      <Toaster />
+    <div className='h-full pt-4'>
       <Button form={customFormId} type="submit" variant={'default'} className="absolute right-4 top-4 p-3 h-8 bg-orange-500 text-slate-50">Add</Button>
-
-      <SearchBar type="checkbox" searchBarFormId={customFormId} handleClick={handleClick} />
+      <SearchBar type="checkbox" searchBarFormId={customFormId} handleClick={handleClick} placeholder="Add user" />
     </div>
   )
 }
