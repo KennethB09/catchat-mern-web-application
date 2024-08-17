@@ -55,6 +55,7 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
   };
 
   const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: CroppedAreaPixels) => {
+    console.log(croppedArea);
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
