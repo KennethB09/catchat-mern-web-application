@@ -95,7 +95,7 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
         <ImageUploading
           multiple={false}
           value={[]}
-          acceptType={['jpg', 'png']}
+          acceptType={['jpg', 'png', 'jpeg']}
           onChange={onChange}
           maxNumber={maxNumber}
         >

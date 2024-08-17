@@ -211,7 +211,7 @@ export default function Home() {
     }, [socket.connect()]);
 
     return (
-        <div ref={viewport} className='relative no-scrollbar overflow-scroll flex flex-col h-screen w-screen text-sm sm:p-2 sm:flex-row sm:gap-2 sm:bg-gray-300 sm:dark:bg-gray-800 font-roboto'>
+        <div ref={viewport} className='relative no-scrollbar overflow-scroll flex flex-col h-svh w-screen text-sm sm:p-2 sm:flex-row sm:gap-2 sm:bg-gray-300 sm:dark:bg-gray-800 font-roboto'>
 
             {isLoading &&
                 <span className='absolute w-full h-full right-0 self-center flex flex-col items-center justify-center top-0 bg-gray-700 bg-opacity-10 z-50'>
