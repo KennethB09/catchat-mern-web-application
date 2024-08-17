@@ -115,7 +115,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
     }, [sortMessages]);
 
     return (
-        <section className={`${onClickConversation ? 'visible flex flex-col justify-between absolute w-screen h-screen top-0 right-0 bg-slate-100 dark:bg-slate-950 text-slate-50 z-50' : 'hidden'} sm:h-full sm:w-1/2 sm:flex sm:flex-col lg:flex-row sm:gap-2 lg:w-full sm:bg-gray-300 sm:dark:bg-gray-800`}>
+        <section className={`${onClickConversation ? 'visible flex flex-col justify-between absolute w-screen h-svh top-0 right-0 bg-slate-100 dark:bg-slate-950 text-slate-50 z-50' : 'hidden'} sm:h-full sm:w-1/2 sm:flex sm:flex-col lg:flex-row sm:gap-2 lg:w-full sm:bg-gray-300 sm:dark:bg-gray-800`}>
 
             <div className="flex flex-col justify-between w-full h-full sm:dark:bg-slate-950 sm:bg-slate-100">
                 <div className="flex gap-3 h-fit px-3 py-3 shadow-md bg-slate-100 dark:bg-slate-900 sm:dark:bg-slate-950 sm:dark:border-b-4 sm:dark:border-gray-800 sm:bg-slate-100">
