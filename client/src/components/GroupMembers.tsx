@@ -109,16 +109,16 @@ function GroupMembers({ conversation }: GroupMembersProps) {
               <>
                 {conversation.participants.length > 1 &&
                   <>
-                    <form id='removeMemberForm' onSubmit={handleRemoveMember} className='w-full'>
+                    <form id='removeMemberForm' onSubmit={handleRemoveMember} className='flex flex-col gap-1 w-full'>
                       {conversation.participants.map((member: participantsInterface) => (
 
-                        <div key={member.user._id} className={`${member.user._id === user.userId ? 'hidden' : 'visible'} relative flex items-center py-2 h-20`}>
+                        <div key={member.user._id} className={`${member.user._id === user.userId ? 'hidden' : 'visible'} relative flex items-center h-min`}>
                           <input type="checkbox" name='groupMember' value={member.user._id} className='absolute peer z-50 appearance-none w-full h-full cursor-pointer' />
-                          <label htmlFor='groupMember' className={`w-full gap-3 flex peer-checked:bg-slate-600 rounded-md p-2`}>
+                          <label htmlFor='groupMember' className={`w-full gap-3 flex peer-checked:bg-slate-400 dark:peer-checked:bg-slate-600 rounded-md p-2`}>
                             <img className="w-12 h-12 rounded-full" src={member.user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${member.user.userAvatar}`} />
                             <div className='flex flex-col'>
-                              <h1>{member.user.username}</h1>
-                              <p className='text-orange-500'>{member.role}</p>
+                              <h1 className='text-slate-600 font-semibold dark:text-slate-200'>{member.user.username}</h1>
+                              <p className='text-orange-500 text-xs'>{member.role}</p>
                             </div>
                           </label>
                         </div>
@@ -133,8 +133,8 @@ function GroupMembers({ conversation }: GroupMembersProps) {
                   <div key={member.user._id} className="flex gap-3 items-center p-3">
                     <img className="w-12 h-12 rounded-full" src={member.user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${member.user.userAvatar}`} />
                     <div className='flex flex-col'>
-                      <h1>{member.user.username}</h1>
-                      <p className='text-orange-500'>{member.role}</p>
+                      <h1 className='text-slate-600 font-semibold dark:text-slate-200'>{member.user.username}</h1>
+                      <p className='text-orange-500 text-xs'>{member.role}</p>
                     </div>
                   </div>
                 ))}
@@ -149,8 +149,8 @@ function GroupMembers({ conversation }: GroupMembersProps) {
             <div key={member.user._id} className="flex gap-3 items-center p-3">
               <img className="w-12 h-12 rounded-full" src={member.user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${member.user.userAvatar}`} />
               <div className='flex flex-col'>
-                <h1>{member.user.username}</h1>
-                <p className='text-orange-500'>{member.role}</p>
+                <h1 className='text-slate-600 font-semibold dark:text-slate-200'>{member.user.username}</h1>
+                <p className='text-orange-500 text-xs'>{member.role}</p>
               </div>
             </div>
           ))}

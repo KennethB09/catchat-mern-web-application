@@ -189,12 +189,12 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                 <div key={i}>
                                     {m.sender._id === user.userId ?
                                         <div className={`ml-32`}>
-                                            <p className={`text-slate-50 bg-orange-500 break-all w-fit text-wrap ml-auto left-0 p-2 my-[2px] rounded-bl-xl rounded-br-sm rounded-tl-xl rounded-tr-xl`}>{m.content}</p>
+                                            <p className={`text-slate-50 bg-orange-500 break-all w-fit text-wrap ml-auto left-0 p-2 my-[2px] rounded-bl-xl rounded-br-sm rounded-tl-xl rounded-tr-xl animate-append-animate`}>{m.content}</p>
                                         </div>
                                         :
                                         <div className="flex gap-3">
                                             <img className="w-6 h-6 rounded-full mt-auto" src={m.sender.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${m.sender.userAvatar}`} />
-                                            <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl'}>{m.content}</p>
+                                            <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl animate-append-animate'}>{m.content}</p>
                                         </div>
                                     }
                                 </div>
@@ -206,12 +206,12 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                 <div key={i}>
                                     {m.sender._id === user.userId ?
                                         <div className={`ml-32`}>
-                                            <p className={`text-slate-50 bg-orange-500 break-all w-fit text-wrap ml-auto left-0 p-2 my-[2px] rounded-bl-xl rounded-br-sm rounded-tl-xl rounded-tr-xl`}>{m.content}</p>
+                                            <p className={`text-slate-50 bg-orange-500 break-all w-fit text-wrap ml-auto left-0 p-2 my-[2px] rounded-bl-xl rounded-br-sm rounded-tl-xl rounded-tr-xl animate-append-animate`}>{m.content}</p>
                                         </div>
                                         :
                                         <div className="flex gap-3">
                                             <img className="w-6 h-6 rounded-full mt-auto" src={m.sender.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${m.sender.userAvatar}`} />
-                                            <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl'}>{m.content}</p>
+                                            <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl animate-append-animate'}>{m.content}</p>
                                         </div>
                                     }
                                 </div>

@@ -113,8 +113,8 @@ const createNewGroup = async (req, res) => {
         const currentUser = await User.findOne({ _id: user });
         
         // Create consistent objects for all members
-        const members = groupMember.map(id => ({
-            user: new mongoose.Types.ObjectId(id),
+        const members = groupMember.map(u => ({
+            user: new mongoose.Types.ObjectId(u._id),
             role: 'member'
         }));
 
@@ -157,8 +157,8 @@ const createNewGroup = async (req, res) => {
 
 const addGroupMember = async (req, res) => {
     const { groupId, newMembers } = req.body;
-    const newMemberId = newMembers.map(id => ({
-        user: new mongoose.Types.ObjectId(id),
+    const newMemberId = newMembers.map(u => ({
+        user: new mongoose.Types.ObjectId(u._id),
         role: 'member'
     }))
     try {

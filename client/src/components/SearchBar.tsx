@@ -7,14 +7,14 @@ type SearchBarProps = {
     handleClick?: (param: any) => void;
     type: 'checkbox' | 'onClick';
     placeholder?: string;
-    searchBarFormId?: string;
 }
 
-export default function SearchBar({ handleClick, type, placeholder, searchBarFormId }: SearchBarProps) {
+export default function SearchBar({ handleClick, type, placeholder }: SearchBarProps) {
 
     const { user } = useAuthContext();
     const [input, setInput] = useState<string>("");
     const [searchResult, setSearchResult] = useState<userInterface[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         setInput('')
@@ -33,6 +33,7 @@ export default function SearchBar({ handleClick, type, placeholder, searchBarFor
     const handleSearch = async () => {
 
         try {
+            setIsLoading(true);
             const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/search?username=${input}`, {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
@@ -44,7 +45,7 @@ export default function SearchBar({ handleClick, type, placeholder, searchBarFor
             }
 
             const data = await response.json();
-
+            setIsLoading(false);
             setSearchResult(data); // Convert to string for display
         } catch (error) {
             console.error('Search error:', error);
@@ -69,37 +70,45 @@ export default function SearchBar({ handleClick, type, placeholder, searchBarFor
 
             </div>
 
-            <div className="absolute w-full overflow-y-scroll bg-slate-950/30  backdrop-blur-md rounded-md border-orange-500 mt-2 px-1 no-scrollbar">
-                {input !== '' ? type === "onClick" ?
-                    searchResult.map((u: userInterface) => (
-                        <>
-                            {u._id !== user.userId &&
-                                <div key={u._id} onClick={() => handleClick!(u._id)} className="w-full bg-slate-800 bg-opacity-30 p-2 rounded-md mt-1 text-slate-50 backdrop-blur-sm flex items-center space-x-4 hover:bg-slate-500 cursor-pointer z-50">
-                                    <img className="w-12 h-12 rounded-full" src={u.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${u.userAvatar}`} />
-                                    <p>{u.username}</p>
-                                </div>
-                            }
-                        </>
-                    ))
-                    :
-                    <form id={searchBarFormId} onSubmit={handleClick}>
-                        {searchResult.map((u: userInterface) => (
+            {input !== '' &&
+                <div className="absolute w-full overflow-y-scroll p-1 bg-slate-950/30  backdrop-blur-md rounded-md border-orange-500 mt-2 px-1 no-scrollbar">
+                    {isLoading &&
+                        <div className="w-full flex justify-center">
+                            <svg className='fill-orange-500' xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" /><path fill="" d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"><animateTransform attributeName="transform" dur="1.125s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" /></path>
+                            </svg>
+                        </div>
+                    }
+                    {type === "onClick" ?
+                        searchResult.map((u: userInterface) => (
                             <>
                                 {u._id !== user.userId &&
-                                    <div key={u._id} className="relative flex items-center py-[1px] h-min">
-                                        <input type="checkbox" name='users' value={u._id} className='absolute peer z-50 appearance-none w-full h-full cursor-pointer' />
-                                        <label htmlFor='users' className='w-full gap-3 flex items-center peer-checked:bg-slate-300 peer-checked:dark:bg-slate-600 rounded-md p-2'>
-                                            <img className="w-12 h-12 rounded-full" src={u.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${u.userAvatar}`} />
-                                            <h1 className="text-slate-50">{u.username}</h1>
-                                        </label>
+                                    <div key={u._id} onClick={() => handleClick!(u._id)} className="w-full bg-slate-800 bg-opacity-30 p-2 rounded-md mt-1 text-slate-50 backdrop-blur-sm flex items-center space-x-4 hover:bg-slate-500 cursor-pointer z-50">
+                                        <img className="w-12 h-12 rounded-full" src={u.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${u.userAvatar}`} />
+                                        <p>{u.username}</p>
                                     </div>
                                 }
                             </>
-                        ))}
-                    </form>
-                    : <></>
-                }
-            </div>
+                        ))
+                        :
+                        <>
+                            {searchResult.map((u: userInterface) => (
+                                <>
+                                    {u._id !== user.userId &&
+                                        <div key={u._id} className="relative flex items-center py-[1px] h-min hover:bg-slate-300 dark:hover:bg-gray-600 rounded-sm">
+                                            <input type="checkbox" name='search_user' value={u._id} onChange={() => handleClick!(u)} className='absolute peer z-auto appearance-none w-full h-full cursor-pointer' />
+                                            <label htmlFor='search_user' className='w-full gap-3 flex items-center peer-checked:bg-slate-300 peer-checked:dark:bg-slate-600 rounded-md p-2'>
+                                                <img className="w-12 h-12 rounded-full" src={u.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${u.userAvatar}`} />
+                                                <h1 className="text-slate-50">{u.username}</h1>
+                                            </label>
+                                        </div>
+                                    }
+                                </>
+                            ))}
+                        </>
+                    }
+                </div>
+            }
 
         </div>
     )
