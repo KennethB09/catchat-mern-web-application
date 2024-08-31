@@ -45,7 +45,7 @@ export default function Home() {
         socket.emit('group message', newMessage, conversationId);
     };
 
-    function clickedConversation(conversationType: string, recipientUser: userInterface | undefined, conversation: ConversationInterface) {
+    function clickedConversation(conversationType: string, recipientUser: userInterface, conversation: ConversationInterface) {
 
         if (viewport.current!.clientWidth < 640) {
             onClick();
@@ -55,12 +55,15 @@ export default function Home() {
 
         if (conversationType == 'personal') {
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
-            dispatch({ type: 'SET_USER', payload: recipientUser! });
+            dispatch({ type: 'SET_USER', payload: recipientUser });
             setCurrentConversation(conversation._id);
+        } else if (conversationType === 'new_conversation') {
+            dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
+            dispatch({ type: 'SET_USER', payload: recipientUser });
         } else {
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: conversation });
             setCurrentConversation(conversation._id);
-        } 
+        }
     };
 
     useEffect(() => {

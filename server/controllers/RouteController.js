@@ -30,12 +30,12 @@ const getConversationOrStartNew = async (req, res) => {
                         $all: [
                             {
                                 $elemMatch: {
-                                    user: currentUserId
+                                    user: new mongoose.Types.ObjectId(currentUserId)
                                 },
                             },
                             {
                                 $elemMatch: {
-                                    user: userId
+                                    user: new mongoose.Types.ObjectId(userId)
                                 },
                             },
                         ],
@@ -190,8 +190,19 @@ const getConversationOrStartNew = async (req, res) => {
 
     const findUser = await User.findById(userId);
 
+    if (findConversation.length === 0) {
+        res.status(200).json({
+            conversation: null, user: {
+                _id: findUser._id,
+                username: findUser.username,
+                userAvatar: findUser.userAvatar
+            }
+        });
+        return;
+    };
+
     res.status(200).json({
-        conversation: findConversation, user: {
+        conversation: findConversation[0], user: {
             _id: findUser._id,
             username: findUser.username,
             userAvatar: findUser.userAvatar

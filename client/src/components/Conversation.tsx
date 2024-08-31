@@ -140,7 +140,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
         }
     };
 
-    const sortMessages = conversation?.messages!.sort((a, b) => {
+    const sortMessages = conversation?.messages?.sort((a, b) => {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     });
 
@@ -281,7 +281,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             wrap="soft"
                             required
                         />
-                        <Button variant={'ghost'} className="w-fit p-0" disabled={conversation === null ? true : false}>
+                        <Button variant={'ghost'} className="w-fit p-0" disabled={recipientUser === null ? true : false}>
                             <svg className="fill-orange-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
                                 <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z" />
                             </svg>

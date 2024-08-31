@@ -29,7 +29,7 @@ interface HeaderProps {
     setIsLoading: Dispatch<SetStateAction<boolean>>;
     onlineUsers: userInterface[] | null;
     onClickUser: () => void;
-    clickedConversation: (conversationType: string, recipientUser: userInterface | undefined, conversation: ConversationInterface) => void;
+    clickedConversation: (conversationType: string, recipientUser: userInterface, conversation: ConversationInterface) => void;
 }
 
 export default function Header({ onlineUsers, setIsLoading, onClickUser, isOnlineLoading, clickedConversation }: HeaderProps) {
@@ -43,7 +43,6 @@ export default function Header({ onlineUsers, setIsLoading, onClickUser, isOnlin
 
     const handleClick = async (userId: string) => {
         setIsLoading(true);
-        const users = { userId, currentUserId: user.userId }
 
         const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/conversation`, {
             method: 'POST',
@@ -51,13 +50,18 @@ export default function Header({ onlineUsers, setIsLoading, onClickUser, isOnlin
                 'Authorization': `Bearer ${user.token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(users)
+            body: JSON.stringify({ userId, currentUserId: user.userId })
         });
 
         const json: dataInterface = await response.json();
 
         if (response.ok) {
             setIsLoading(false);
+            if (json.conversation === null) {
+                setIsLoading(false);
+                clickedConversation('new_conversation', json.user, json.conversation);
+                return;
+            }
             clickedConversation('personal', json.user, json.conversation);
         };
     };
