@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { useAuthContext } from '../context/AuthContext';
+import { useConversationContext } from '@/context/ConversationContext';
 import { useToastContext } from '@/hooks/useToast';
 
 import { participantsInterface, ConversationInterface } from "@/ts/interfaces/Conversation_interface";
@@ -27,9 +28,11 @@ type GroupMembersProps = {
 function GroupMembers({ conversation }: GroupMembersProps) {
 
   const { user } = useAuthContext();
+  const { dispatch } = useConversationContext();
   const { toast } = useToastContext();
   const [editMembers, setEditMembers] = useState(false);
   const [toggle, setToggle] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(false);
   const ifAdmin = conversation.participants.filter(m => m.user._id === user.userId);
 
   function onClick() {
@@ -47,6 +50,10 @@ function GroupMembers({ conversation }: GroupMembersProps) {
     const formData = new FormData(form);
     const selectedUsers = formData.getAll('groupMember') as string[];
 
+    if (selectedUsers.length === 0) {
+      return setIsEmpty(true);
+    }
+
     const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/conversation-remove-group-member`, {
       method: 'PATCH',
       headers: {
@@ -61,11 +68,14 @@ function GroupMembers({ conversation }: GroupMembersProps) {
 
     const json = await response.json();
     if (response.ok) {
+      setIsEmpty(false);
       toast({
         title: 'Users Removed',
         description: json.message,
         variant: 'default'
-      })
+      });
+
+      dispatch({ type: 'REMOVE_GROUP_MEMBER', payload: selectedUsers })
     };
     if (!response.ok) {
       toast({
@@ -77,7 +87,7 @@ function GroupMembers({ conversation }: GroupMembersProps) {
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col py-4">
 
       {ifAdmin[0].role[0] === "admin" ?
         <>
@@ -85,7 +95,7 @@ function GroupMembers({ conversation }: GroupMembersProps) {
             <SheetTitle className='hidden'>Add members</SheetTitle>
             <SheetDescription className='hidden'>show add user component</SheetDescription>
             <SheetTrigger className={`${editMembers ? 'hidden' : 'visible'} absolute right-24 top-6`} onClick={onClick}>
-              <span className='p-2 rounded-md bg-orange-500 text-sm text-slate-50 hover:bg-opacity-80'>Add User</span>
+              <span className='py-[10px] px-4 rounded-md bg-orange-500 text-sm font-semibold text-slate-50 hover:bg-opacity-80'>Add</span>
             </SheetTrigger>
             <SheetContent side={'right'} className='w-full'>
               <SheetClose onClick={onClick}>
@@ -104,7 +114,8 @@ function GroupMembers({ conversation }: GroupMembersProps) {
               <Button variant={'outline'} className='' onClick={toEditMembers}>Cancel</Button>
             </div>
           }
-          <div className='pt-4'>
+          <div className='pt-4 h-full overflow-y-scroll no-scrollbar'>
+            {isEmpty && <p className='text-red-600 font-semibold text-xs'>Please, select a user to remove</p>}
             {editMembers ?
               <>
                 {conversation.participants.length > 1 &&
@@ -114,7 +125,7 @@ function GroupMembers({ conversation }: GroupMembersProps) {
 
                         <div key={member.user._id} className={`${member.user._id === user.userId ? 'hidden' : 'visible'} relative flex items-center h-min`}>
                           <input type="checkbox" name='groupMember' value={member.user._id} className='absolute peer z-50 appearance-none w-full h-full cursor-pointer' />
-                          <label htmlFor='groupMember' className={`w-full gap-3 flex peer-checked:bg-slate-400 dark:peer-checked:bg-slate-600 rounded-md p-2`}>
+                          <label htmlFor='groupMember' className={`w-full gap-3 flex peer-checked:bg-gray-300 dark:peer-checked:bg-gray-800 rounded-md p-2`}>
                             <img className="w-12 h-12 rounded-full" src={member.user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${member.user.userAvatar}`} />
                             <div className='flex flex-col'>
                               <h1 className='text-slate-600 font-semibold dark:text-slate-200'>{member.user.username}</h1>

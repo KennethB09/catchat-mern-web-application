@@ -1,3 +1,4 @@
+import { useState } from 'react';
 // Context Hook
 import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from "../context/AuthContext";
@@ -29,6 +30,11 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
     const { recipientUser, conversation, dispatch } = useConversationContext();
     const { user } = useAuthContext();
     const { toast } = useToastContext();
+    const [changeProfile, setChangeProfile] = useState(false);
+
+    const toggleProfile = () => {
+        setChangeProfile(prev =>!prev);
+    };
 
     const leaveGroup = async () => {
         const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/conversation-leave-group`, {
@@ -50,7 +56,8 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
                 leaveConversation();
                 onSheetOpen();
             };
-            dispatch({ type: 'LEAVE_GROUP', payload: json.leavedGroup })
+            dispatch({ type: 'LEAVE_GROUP', payload: json.leavedGroup });
+            dispatch({ type: 'SET_CLICK_CONVERSATION', payload: null });
         } else {
             toast({
                 title: "Ops, something when't wrong",
@@ -116,33 +123,33 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
     };
 
     return (
-        <aside className={`flex flex-col h-full p-4 ${isHidden} lg:w-[35%] bg-slate-100 sm:bg-slate-100 dark:bg-slate-950 sm:dark:bg-slate-950 sm:rounded-br-md sm:rounded-tr-md`}>
+        <aside className={`flex flex-col h-full p-4 ${isHidden} bg-slate-100 lg:flex lg:flex-col sm:bg-slate-100 dark:bg-slate-950 sm:dark:bg-slate-950 sm:rounded-br-md sm:rounded-tr-md lg:w-[35%]`}>
             {conversation?.conversationType == 'personal' ?
                 <>
                     <div className="max-w-fit mx-auto mt-9 pb-2 relative">
                         <img src={recipientUser?.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${recipientUser?.userAvatar}`} className="w-24 rounded-full" />
                     </div>
-                    <div className="text-orange-500 border-b-2 border-slate-300 pb-3 mb-4 dark:text-slate-50">
+                    <div className="border-b-[1px] border-gray-400 pb-3 mb-4 dark:text-slate-50">
                         <div className="text-center text-xl font-bold pb-3">
-                            <h1>{recipientUser?.username}</h1>
+                            <h1 className='text-gray-600 dark:text-slate-50 text-lg'>{recipientUser?.username}</h1>
                         </div>
-                        <p className="text-sm sm:text-xs"><span className="font-semibold">E-mail: </span><br />{recipientUser?.email}</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm text-ellipsis whitespace-nowrap overflow-hidden"><span className="text-gray-600 dark:text-gray-300 font-semibold">E-mail: </span><br />{recipientUser?.email}</p>
                     </div>
                 </>
                 :
                 <>
                     <div className="max-w-fit mx-auto mt-9 pb-2 text-center">
-                        <img src={conversation?.groupAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${conversation?.groupAvatar}`} className="w-24 rounded-full" />
-                        <UploadImage uploadPurpose='change_group_image' userIdOrConversationId={conversation?._id}/>
+                        <img src={conversation?.groupAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${conversation?.groupAvatar}`} className="w-24 rounded-full cursor-pointer" onClick={toggleProfile} />
+                        {changeProfile && conversation !== null && <UploadImage uploadPurpose='change_group_image' userIdOrConversationId={conversation?._id}/>}
                     </div>
-                    <div className="text-orange-500 border-b-2 border-slate-50 pb-3 mb-4 dark:text-slate-50">
+                    <div className="text-orange-500 border-b-[1px] border-gray-400 pb-3 mb-4 dark:text-slate-50">
                         <div className="text-center text-xl font-bold pb-3">
-                            <h1>{conversation?.conversationName}</h1>
+                            <h1 className='text-gray-600 dark:text-slate-50 text-lg'>{conversation?.conversationName}</h1>
                         </div>
                     </div>
                 </>
             }
-            <div className="h-full sm:h-[40vh] flex flex-col justify-between">
+            <div className="h-full flex flex-col justify-between">
                 {conversation?.conversationType == 'group' ?
                     <>
                         <Sheet>
@@ -151,13 +158,13 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
                             </SheetTitle>
                             <SheetDescription className='hidden'>Show the members of the group</SheetDescription>
                             <SheetTrigger>
-                                <div className='w-full flex items-center gap-3 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md'>
-                                    <svg className='fill-orange-500' xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512">
+                                <div className='flex gap-3 items-center cursor-pointer p-2 hover:bg-gray-300 dark:hover:bg-gray-700 rounded-md'>
+                                    <svg className='fill-gray-600 dark:fill-gray-300' xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512">
                                         <path d="M349.1 334.7c-11.2-4-29.5-4.2-37.6-7.3-5.6-2.2-14.5-4.6-17.4-8.1-2.9-3.5-2.9-28.5-2.9-28.5s7-6.6 9.9-14c2.9-7.3 4.8-27.5 4.8-27.5s6.6 2.8 9.2-10.4c2.2-11.4 6.4-17.4 5.3-25.8-1.2-8.4-5.8-6.4-5.8-6.4s5.8-8.5 5.8-37.4c0-29.8-22.5-59.1-64.6-59.1-42 0-64.7 29.4-64.7 59.1 0 28.9 5.7 37.4 5.7 37.4s-4.7-2-5.8 6.4c-1.2 8.4 3 14.4 5.3 25.8 2.6 13.3 9.2 10.4 9.2 10.4s1.9 20.1 4.8 27.5c2.9 7.4 9.9 14 9.9 14s0 25-2.9 28.5-11.8 5.9-17.4 8c-8 3.1-26.3 3.5-37.6 7.5-11.2 4-45.8 22.2-45.8 67.2h278.3c.1-45.1-34.5-63.3-45.7-67.3z" fill="" />
                                         <path d="M140 286s23.9-.8 33.4-9.3c-15.5-23.5-7.1-50.9-10.3-76.5-3.2-25.5-17.7-40.8-46.7-40.8h-.4c-28 0-43.1 15.2-46.3 40.8-3.2 25.5 5.7 56-10.2 76.5C69 285.3 93 285 93 285s1 14.4-1 16.8c-2 2.4-7.9 4.7-12 5.5-8.8 1.9-18.1 4.5-25.9 7.2-7.8 2.7-22.6 17.2-22.6 37.2h80.3c2.2-8 17.3-22.3 32-29.8 9-4.6 17.9-4.3 24.7-5.2 0 0 3.8-6-8.7-8.3 0 0-17.2-4.3-19.2-6.7-1.9-2.2-.6-15.7-.6-15.7z" fill="" />
                                         <path d="M372 286s-23.9-.8-33.4-9.3c15.5-23.5 7.1-50.9 10.3-76.5 3.2-25.5 17.7-40.8 46.7-40.8h.4c28 0 43.1 15.2 46.3 40.8 3.2 25.5-5.7 56 10.2 76.5-9.5 8.6-33.5 8.3-33.5 8.3s-1 14.4 1 16.8c2 2.4 7.9 4.7 12 5.5 8.8 1.9 18.1 4.5 25.9 7.2 7.8 2.7 22.6 17.2 22.6 37.2h-80.3c-2.2-8-17.3-22.3-32-29.8-9-4.6-17.9-4.3-24.7-5.2 0 0-3.8-6 8.7-8.3 0 0 17.2-4.3 19.2-6.7 1.9-2.2.6-15.7.6-15.7z" fill="" />
                                     </svg>
-                                    <h1 className='font-semibold text-gray-500'>Members</h1>
+                                    <h1 className='font-semibold text-base text-gray-600 dark:text-gray-300'>Members</h1>
                                 </div>
                             </SheetTrigger>
                             <SheetContent className='w-full bg-slate-100 dark:bg-slate-900'>
@@ -171,16 +178,10 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
                                 <GroupMembers conversation={conversation} />
                             </SheetContent>
                         </Sheet>
-                        <Button variant='destructive' className="w-full font-semibold uppercase" onClick={leaveGroup}>Leave</Button>
+                        <Button variant='outline' className="w-full font-semibold text-red-600 border-red-600 hover:text-red-700 hover:border-red-700 mt-auto dark:bg-transparent uppercase" onClick={leaveGroup}>Leave</Button>
                     </>
                     :
-                    <>
-                        {!isUserBlocked ?
-                            <Button variant='destructive' className="w-full font-medium capitalize mt-auto" onClick={blockUser} disabled={conversation === null ? true : false}>Block User</Button>
-                            :
-                            <Button variant='default' className="w-full font-medium capitalize mt-auto" onClick={unblockUser}>unBlock User</Button>
-                        }
-                    </>
+                    <Button variant='outline' className="w-full font-semibold text-red-600 border-red-600 hover:text-red-700 hover:border-red-700 mt-auto dark:bg-transparent uppercase cursor-pointer" onClick={!isUserBlocked ? blockUser : unblockUser} disabled={conversation === null ? true : false}>{!isUserBlocked ? 'Block User' : 'unBlock User'}</Button>
                 }
             </div>
         </aside>

@@ -11,7 +11,8 @@ const {
     removeGroupMember,
     leaveGroup,
     blockUser,
-    unBlockUser
+    unBlockUser,
+    loadMessage
 } = require('../controllers/RouteController');
 const requireAuth = require('../middlewares/requireAuth');
 
@@ -42,5 +43,7 @@ router.patch('/conversation-leave-group', leaveGroup);
 router.patch('/block-user', blockUser);
 
 router.patch('/unblock-user', unBlockUser);
+
+router.post('/load-message', loadMessage);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const User = require('../models/UserModel');
 const { Conversation } = require('../models/ConversationModel');
-const mongoose = require('mongoose'); 
+const mongoose = require('mongoose');
 
 const searchUser = async (req, res) => {
     const { username } = req.query;
@@ -11,7 +11,7 @@ const searchUser = async (req, res) => {
 
     try {
         const users = await User.find({ username: { $regex: username, $options: 'i' } });
-        
+
         res.status(200).json(users);
     } catch (error) {
         console.error('Search error:', error);
@@ -22,33 +22,337 @@ const searchUser = async (req, res) => {
 const getConversationOrStartNew = async (req, res) => {
     const { userId, currentUserId } = req.body;
 
-    const findConversation = await Conversation.findOne({
-        participants: { $all: [
-            { $elemMatch: { user: currentUserId} },
-            { $elemMatch: { user: userId } }
-        ]},
-        conversationType: "personal"
-    }).populate('participants.user', 'username userAvatar email').populate('messages.sender', 'username userAvatar')
+    const findConversation = await Conversation.aggregate([
+        [
+            {
+                $match: {
+                    participants: {
+                        $all: [
+                            {
+                                $elemMatch: {
+                                    user: currentUserId
+                                },
+                            },
+                            {
+                                $elemMatch: {
+                                    user: userId
+                                },
+                            },
+                        ],
+                    },
+                    conversationType: "personal",
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "participants.user",
+                    foreignField: "_id",
+                    as: "populatedUsers",
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "messages.sender",
+                    foreignField: "_id",
+                    as: "populatedSenders",
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    participants: {
+                        $map: {
+                            input: "$participants",
+                            as: "participant",
+                            in: {
+                                $mergeObjects: [
+                                    "$$participant",
+                                    {
+                                        user: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: "$populatedUsers",
+                                                        cond: {
+                                                            $eq: [
+                                                                "$$this._id",
+                                                                "$$participant.user",
+                                                            ],
+                                                        },
+                                                    },
+                                                },
+                                                0,
+                                            ],
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                    messages: {
+                        $map: {
+                            input: {
+                                $slice: [
+                                    {
+                                        $sortArray: {
+                                            input: "$messages",
+                                            sortBy: { createdAt: -1 },
+                                        },
+                                    },
+                                    20,
+                                ],
+                            },
+                            as: "message",
+                            in: {
+                                $mergeObjects: [
+                                    "$$message",
+                                    {
+                                        sender: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input:
+                                                            "$populatedSenders",
+                                                        cond: {
+                                                            $eq: [
+                                                                "$$this._id",
+                                                                "$$message.sender",
+                                                            ],
+                                                        },
+                                                    },
+                                                },
+                                                0,
+                                            ],
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                    groupAvatar: 1,
+                    conversationName: 1,
+                    conversationType: 1,
+                    updatedAt: 1,
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    participants: {
+                        $map: {
+                            input: "$participants",
+                            as: "participant",
+                            in: {
+                                user: {
+                                    _id: "$$participant.user._id",
+                                    username:
+                                        "$$participant.user.username",
+                                    userAvatar:
+                                        "$$participant.user.userAvatar",
+                                    email: "$$participant.user.email",
+                                    blockedUser:
+                                        "$$participant.user.blockedUser",
+                                    userStatus:
+                                        "$$participant.user.userStatus",
+                                },
+                                role: "$$participant.role",
+                            },
+                        },
+                    },
+                    messages: {
+                        $map: {
+                            input: "$messages",
+                            as: "message",
+                            in: {
+                                _id: "$$message._id",
+                                content: "$$message.content",
+                                createdAt: "$$message.createdAt",
+                                sender: {
+                                    _id: "$$message.sender._id",
+                                    username:
+                                        "$$message.sender.username",
+                                    userAvatar:
+                                        "$$message.sender.userAvatar",
+                                },
+                            },
+                        },
+                    },
+                    groupAvatar: 1,
+                    conversationName: 1,
+                    conversationType: 1,
+                    updatedAt: 1,
+                },
+            },
+        ]
+    ]);
 
     const findUser = await User.findById(userId);
 
-    res.status(200).json({conversation: findConversation, user: {
-        _id: findUser._id,
-        username: findUser.username,
-        userAvatar: findUser.userAvatar
-    }});
+    res.status(200).json({
+        conversation: findConversation, user: {
+            _id: findUser._id,
+            username: findUser.username,
+            userAvatar: findUser.userAvatar
+        }
+    });
 };
 
 const getConversation = async (req, res) => {
     const user_id = req.user._id;
     try {
-        const conversations = await Conversation.find({
-            participants: {
-                $elemMatch: { user: user_id }
+        const conversations = await Conversation.aggregate([
+            // FIRST PIPELINE: Find the conversations that the participants have the current user ID.
+            {
+                $match: {
+                    participants: {
+                        $elemMatch: { user: user_id }
+                    }
+                }
+            },
+            // SECOND PIPELINE: Populate the user documents for each conversation participant and also
+            // the sender of each message in messages array field.
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "participants.user",
+                    foreignField: "_id",
+                    as: "populatedUsers",
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "messages.sender",
+                    foreignField: "_id",
+                    as: "populatedSenders",
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    participants: {
+                        $map: {
+                            input: "$participants",
+                            as: "participant",
+                            in: {
+                                $mergeObjects: [
+                                    "$$participant",
+                                    {
+                                        user: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: "$populatedUsers",
+                                                        cond: {
+                                                            $eq: [
+                                                                "$$this._id",
+                                                                "$$participant.user",
+                                                            ],
+                                                        },
+                                                    },
+                                                },
+                                                0,
+                                            ],
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                    messages: {
+                        $map: {
+                            input: {
+                                $slice: [
+                                    {
+                                        $sortArray: {
+                                            input: "$messages",
+                                            sortBy: { createdAt: -1 },
+                                        },
+                                    },
+                                    20
+                                ],
+                            },
+                            as: "message",
+                            in: {
+                                $mergeObjects: [
+                                    "$$message",
+                                    {
+                                        sender: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: "$populatedSenders",
+                                                        cond: {
+                                                            $eq: [
+                                                                "$$this._id",
+                                                                "$$message.sender"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                0
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    groupAvatar: 1,
+                    conversationName: 1,
+                    conversationType: 1,
+                    updatedAt: 1,
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    participants: {
+                        $map: {
+                            input: "$participants",
+                            as: "participant",
+                            in: {
+                                user: {
+                                    _id: "$$participant.user._id",
+                                    username:
+                                        "$$participant.user.username",
+                                    userAvatar:
+                                        "$$participant.user.userAvatar",
+                                    email: "$$participant.user.email",
+                                    blockedUser:
+                                        "$$participant.user.blockedUser",
+                                    userStatus:
+                                        "$$participant.user.userStatus",
+                                },
+                                role: "$$participant.role",
+                            },
+                        },
+                    },
+                    messages: {
+                        $map: {
+                            input: "$messages",
+                            as: "message",
+                            in: {
+                                _id: "$$message._id",
+                                content: "$$message.content",
+                                createdAt: "$$message.createdAt",
+                                sender: {
+                                    _id: "$$message.sender._id",
+                                    username: "$$message.sender.username",
+                                    userAvatar: "$$message.sender.userAvatar",
+                                }
+                            },
+                        },
+                    },
+                    groupAvatar: 1,
+                    conversationName: 1,
+                    conversationType: 1,
+                    updatedAt: 1,
+                },
             }
-        }).populate('participants.user', 'username userAvatar email blockedUser userStatus')
-          .populate('messages.sender', 'username userAvatar').sort({ timestamps: -1 })
-
+        ]).sort({ updatedAt: -1 });
         if (conversations.length === 0) {
             return res.status(200).json(conversations);
         }
@@ -56,15 +360,114 @@ const getConversation = async (req, res) => {
         res.status(200).json(conversations);
     } catch (error) {
         console.log(error.message)
-        res.status(400).json({error: error.message})
+        res.status(400).json({ error: error.message })
     }
 };
+
+const loadMessage = async (req, res) => {
+    const { conversationId, limit, skip } = req.body;
+
+    try {
+        const newMessages = await Conversation.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(conversationId),
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "messages.sender",
+                    foreignField: "_id",
+                    as: "populatedSenders",
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    messages: {
+                        $map: {
+                            input: {
+                                $slice: [
+                                    {
+                                        $sortArray: {
+                                            input: "$messages",
+                                            sortBy: {
+                                                createdAt: -1,
+                                            },
+                                        },
+                                    },
+                                    parseInt(skip, 10),
+                                    parseInt(limit, 10),
+                                ],
+                            },
+                            as: "message",
+                            in: {
+                                $mergeObjects: [
+                                    "$$message",
+                                    {
+                                        sender: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input:
+                                                            "$populatedSenders",
+                                                        cond: {
+                                                            $eq: [
+                                                                "$$this._id",
+                                                                "$$message.sender",
+                                                            ],
+                                                        },
+                                                    },
+                                                },
+                                                0,
+                                            ],
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    messages: {
+                        $map: {
+                            input: "$messages",
+                            as: "message",
+                            in: {
+                                _id: "$$message._id",
+                                content: "$$message.content",
+                                createdAt: "$$message.createdAt",
+                                sender: {
+                                    _id: "$$message.sender._id",
+                                    username:
+                                        "$$message.sender.username",
+                                    userAvatar:
+                                        "$$message.sender.userAvatar",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        ]);
+        const newMessageBatch = newMessages.map(i => i.messages);
+
+        res.status(200).json(newMessageBatch[0]);
+    } catch (error) {
+        console.log(error.message)
+        res.status(400).json({ error: error.message })
+    }
+}
 
 const getContacts = async (req, res) => {
     const user_id = req.user._id;
 
     try {
-        const user = await User.findById(user_id).populate('contacts', 'username userAvatar conversationType messages');
+        const user = await User.findById(user_id).populate('contacts', 'username userAvatar');
 
         res.status(200).json(user.contacts)
     } catch (error) {
@@ -78,7 +481,7 @@ const postImageOrAvatar = async (req, res) => {
     const extractImage = image.split(',')[1]
 
     try {
-        if(purpose === 'change_user_avatar') {
+        if (purpose === 'change_user_avatar') {
             await User.updateOne({
                 _id: userIdOrConversationId
             }, {
@@ -88,7 +491,7 @@ const postImageOrAvatar = async (req, res) => {
             });
         }
 
-        if(purpose === 'change_group_image') {
+        if (purpose === 'change_group_image') {
             await Conversation.updateOne({
                 _id: userIdOrConversationId
             }, {
@@ -97,7 +500,7 @@ const postImageOrAvatar = async (req, res) => {
                 }
             });
         }
-        
+
         res.json({ message: 'Image updated' })
     } catch (error) {
         console.log(error.message)
@@ -111,7 +514,7 @@ const createNewGroup = async (req, res) => {
 
     try {
         const currentUser = await User.findOne({ _id: user });
-        
+
         // Create consistent objects for all members
         const members = groupMember.map(u => ({
             user: new mongoose.Types.ObjectId(u._id),
@@ -146,9 +549,154 @@ const createNewGroup = async (req, res) => {
             }
         );
 
-        const findGroup = await Conversation.findOne({ _id: newConversation._id }).populate('participants.user', 'username userAvatar email blockedUser userStatus').populate('messages.sender', 'username userAvatar');
+        const findGroup = await Conversation.aggregate([
+            {
+                $match: {
+                    _id: newConversation._id
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "participants.user",
+                    foreignField: "_id",
+                    as: "populatedUsers",
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "messages.sender",
+                    foreignField: "_id",
+                    as: "populatedSenders",
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    participants: {
+                        $map: {
+                            input: "$participants",
+                            as: "participant",
+                            in: {
+                                $mergeObjects: [
+                                    "$$participant",
+                                    {
+                                        user: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: "$populatedUsers",
+                                                        cond: {
+                                                            $eq: [
+                                                                "$$this._id",
+                                                                "$$participant.user",
+                                                            ],
+                                                        },
+                                                    },
+                                                },
+                                                0,
+                                            ],
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                    messages: {
+                        $map: {
+                            input: {
+                                $slice: [
+                                    {
+                                        $sortArray: {
+                                            input: "$messages",
+                                            sortBy: { createdAt: -1 },
+                                        },
+                                    },
+                                    20
+                                ],
+                            },
+                            as: "message",
+                            in: {
+                                $mergeObjects: [
+                                    "$$message",
+                                    {
+                                        sender: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: "$populatedSenders",
+                                                        cond: {
+                                                            $eq: [
+                                                                "$$this._id",
+                                                                "$$message.sender"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                0
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    groupAvatar: 1,
+                    conversationName: 1,
+                    conversationType: 1,
+                    updatedAt: 1,
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    participants: {
+                        $map: {
+                            input: "$participants",
+                            as: "participant",
+                            in: {
+                                user: {
+                                    _id: "$$participant.user._id",
+                                    username:
+                                        "$$participant.user.username",
+                                    userAvatar:
+                                        "$$participant.user.userAvatar",
+                                    email: "$$participant.user.email",
+                                    blockedUser:
+                                        "$$participant.user.blockedUser",
+                                    userStatus:
+                                        "$$participant.user.userStatus",
+                                },
+                                role: "$$participant.role",
+                            },
+                        },
+                    },
+                    messages: {
+                        $map: {
+                            input: "$messages",
+                            as: "message",
+                            in: {
+                                _id: "$$message._id",
+                                content: "$$message.content",
+                                createdAt: "$$message.createdAt",
+                                sender: {
+                                    _id: "$$message.sender._id",
+                                    username: "$$message.sender.username",
+                                    userAvatar: "$$message.sender.userAvatar",
+                                }
+                            },
+                        },
+                    },
+                    groupAvatar: 1,
+                    conversationName: 1,
+                    conversationType: 1,
+                    updatedAt: 1,
+                },
+            }
+        ]);
 
-        res.status(200).json(findGroup);
+        res.status(200).json(findGroup[0]);
     } catch (error) {
         console.error('Error creating group:', error);
         res.status(500).json({ message: 'An error occurred while creating the group' });
@@ -162,7 +710,7 @@ const addGroupMember = async (req, res) => {
         role: 'member'
     }))
     try {
-        await Conversation.findByIdAndUpdate(groupId, 
+        await Conversation.findByIdAndUpdate(groupId,
             { $push: { participants: { $each: newMemberId } } },
             { new: true }
         );
@@ -171,7 +719,12 @@ const addGroupMember = async (req, res) => {
             $push: { conversations: groupId }
         });
 
-     res.status(200).json({ message: 'New members added' })
+        const newAddedMembers = await User.find({ _id: { $in: newMembers } }, {
+            username: 1,
+            userAvatar: 1
+        });
+
+        res.status(200).json({ message: 'New members added', newAddedMembers })
     } catch (error) {
         console.error('Error adding group member:', error);
         res.status(500).json({ message: 'An error occurred while adding a group member' });
@@ -182,8 +735,8 @@ const removeGroupMember = async (req, res) => {
     const { groupId, memberId } = req.body;
     try {
         await Conversation.updateOne({
-                _id: groupId
-            },
+            _id: groupId
+        },
             {
                 $pull: { participants: { user: memberId } }
             }
@@ -204,8 +757,8 @@ const leaveGroup = async (req, res) => {
     const { userId, groupId } = req.body;
     try {
         await Conversation.updateOne({
-                _id: groupId
-            },
+            _id: groupId
+        },
             {
                 $pull: { participants: { user: userId } }
             }
@@ -223,7 +776,7 @@ const leaveGroup = async (req, res) => {
 const getUserBlockedUsers = async (req, res) => {
     const user = req.user._id;
     try {
-        const blockedUsers = await User.findOne({ _id: user }).populate('blockedUser', 'username userAvatar conversationType');
+        const blockedUsers = await User.findOne({ _id: user }).populate('blockedUser', 'username email');
 
         res.status(200).json(blockedUsers.blockedUser);
     } catch (error) {
@@ -272,12 +825,13 @@ const unBlockUser = async (req, res) => {
     }
 };
 
-module.exports = { 
-    searchUser, 
+module.exports = {
+    searchUser,
     getConversation,
     getContacts,
     getConversationOrStartNew,
     postImageOrAvatar,
+    loadMessage,
     createNewGroup,
     addGroupMember,
     removeGroupMember,

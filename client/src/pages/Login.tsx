@@ -2,6 +2,7 @@ import { useToastContext } from '@/hooks/useToast';
 import catGif from '../assets/gif/Sleeping Cat.gif';
 import { Link } from 'react-router-dom';
 import { useLogin } from '../hooks/useLogin';
+import { useGoogleSigIn } from '@/hooks/useOAuthSignIn';
 import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input"
 
 export default function Login() {
     const { login, error, isLoading } = useLogin();
+    const { GoogleLogin, oAuthError, oAuthLoading, googleLoginError } = useGoogleSigIn();
     const { toast } = useToastContext();
 
     const formSchema = z.object({
@@ -55,7 +57,7 @@ export default function Login() {
                         <h1 className='text-4xl font-bold text-orange-500'>Welcome Back</h1>
                         <p className='text-base text-gray-500 dark:text-slate-100'>Sign to continue</p>
                     </div>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
                         <FormField
                             control={form.control}
                             name="email"
@@ -82,7 +84,7 @@ export default function Login() {
                                 </FormItem>
                             )}
                         />
-                        <Button type="submit" className='bg-orange-500 w-full' disabled={isLoading}>
+                        <Button type="submit" className='bg-orange-500 w-full text-slate-50' disabled={isLoading || oAuthLoading}>
                             {isLoading ? 
                                 <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
                                     <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" /><path fill="currentColor" d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"><animateTransform attributeName="transform" dur="1.125s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" /></path>
@@ -92,6 +94,12 @@ export default function Login() {
                             }
                         </Button>
                         {error && <p className='text-red-500'>{error}</p>}
+                        <div className='text-center'>
+                            <small className='text-gray-400'>OR</small>
+                        </div>
+                        {GoogleLogin}
+                        {googleLoginError !== '' && <p className='text-red-500 font-semibold'>{googleLoginError}</p>}
+                        {oAuthError !== '' && <p className='text-red-500 font-semibold'>{oAuthError}</p>}
                         <FormDescription>Don't have an account? <Link className='text-orange-500 font-bold' to='/sign-up'>Sign-up</Link></FormDescription>
                     </form>
                 </Form>

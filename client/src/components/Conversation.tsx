@@ -3,6 +3,7 @@ import { socket } from '../socket';
 // Context Hooks
 import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from '../context/AuthContext';
+import { useToastContext } from '@/hooks/useToast';
 // Assets
 import blankAvatar from '../assets/avatar/blank avatar.jpg';
 // UI Components
@@ -31,14 +32,54 @@ export default function Conversation({ onClickConversation, onClick, privateMess
 
     const { user } = useAuthContext();
     const { blockedUsers, conversation, recipientUser, dispatch } = useConversationContext();
+    const { toast } = useToastContext();
     const [message, setMessage] = useState<string>('')
     const newMessageRef = useRef<HTMLDivElement>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [recipientBlockedUsers, setRecipientBlockedUsers] = useState<string[]>([]);
 
+    // Check if the recipient user is in current user blocked list.
     const isUserBlocked: boolean | null = blockedUsers!.some(blockedUser => blockedUser._id === recipientUser?._id);
-    const isCurrentUserBlocked = recipientBlockedUsers?.some(blockedUserId => blockedUserId === user.userId);
+    // Check if the current user is in recipient user blocked list.
+    const isCurrentUserBlocked = recipientUser?.blockedUser?.some(blockedUserId => blockedUserId === user.userId);
+    // True if the recipient user blocked the current user.
+    const isCurrentUserGetBlocked = recipientBlockedUsers.some(id => id === user.userId);
+
+    const messagesLength = conversation?.messages?.length;
+    
+    const loadMoreMessage = async () => {
+        const conversationId = conversation?._id;
+        setIsLoading(true);
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/load-message`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${user.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                conversationId,
+                limit: 20,
+                skip: messagesLength
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            setIsLoading(false);
+            dispatch({ type: 'LOAD_MESSAGE', payload: data })
+        
+        } else {
+            setIsLoading(false);
+            toast({
+                title: "Ops, something went wrong",
+                description: data.error,
+                variant: 'destructive'
+            });
+        }
+    };
 
     useEffect(() => {
 
@@ -53,7 +94,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
         return () => {
             socket.off('recipientBlockedUsers', handleBlockedUsers);
         };
-    }, [])
+    }, [socket.on]);
 
     function onSheetOpen() {
         setSheetOpen(prev => !prev);
@@ -182,7 +223,14 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     </div>
                 </div>
                 {/* Messages container */}
-                <div id="messages_container" ref={newMessageRef} className={`flex flex-col overflow-y-auto no-scrollbar mt-auto px-4`}>
+                <div id="messages_container" ref={newMessageRef} className={`flex flex-col overflow-y-auto no-scrollbar py-2 mt-auto px-4`}>
+                    <button className={messagesLength! < 20 || conversation === null ? "hidden" : "text-gray-400 font-semibold flex justify-center pb-2"} onClick={loadMoreMessage} disabled={isLoading}>
+                        {isLoading ?
+                            <svg className='fill-orange-500' xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" /><path fill="" d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"><animateTransform attributeName="transform" dur="1.125s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" /></path>
+                            </svg>
+                            : 'Load more'}
+                    </button>
                     {conversation?.conversationType == 'personal' ?
                         <>
                             {sortMessages && sortMessages.map((m, i) =>
@@ -220,12 +268,12 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     }
                 </div>
                 {/* Send Message Form */}
-                {isUserBlocked || isCurrentUserBlocked ?
+                {isUserBlocked || isCurrentUserBlocked || isCurrentUserGetBlocked ?
                     <div className="w-full">
                         <p className="text-center text-slate-500 dark:text-slate-400">You can't reply to this conversation.</p>
                     </div>
                     :
-                    <form onSubmit={handleSubmit} className="flex justify-between items-center gap-2 h-13 px-4 py-2 mt-3 bg-white dark:bg-slate-900 w-full sm:dark:bg-gray-800">
+                    <form onSubmit={handleSubmit} className="flex justify-between items-center gap-2 h-13 px-4 py-2 bg-white dark:bg-slate-900 w-full sm:dark:bg-gray-800">
                         <textarea className="w-full rounded-lg px-2 py-1 h-7 text-wrap text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
                             placeholder="Message"
                             value={message}
@@ -233,7 +281,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             wrap="soft"
                             required
                         />
-                        <Button variant={'ghost'} className="w-fit p-0">
+                        <Button variant={'ghost'} className="w-fit p-0" disabled={conversation === null ? true : false}>
                             <svg className="fill-orange-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
                                 <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z" />
                             </svg>

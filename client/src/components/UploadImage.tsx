@@ -3,7 +3,8 @@ import ImageUploading, { ImageListType } from "react-images-uploading";
 import Cropper from "react-easy-crop";
 import { useAuthContext } from "../context/AuthContext";
 import { getCroppedImg } from '../utility/cropImage';
-import { useToastContext } from '@/hooks/useToast';  
+import { useToastContext } from '@/hooks/useToast'; 
+import { useConversationContext } from '@/context/ConversationContext';
 
 interface CroppedAreaPixels {
   x: number;
@@ -19,6 +20,7 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
 
   const { user, dispatch } = useAuthContext();
   const { toast } = useToastContext();
+  const { conversationDispatch } = useConversationContext();
   const maxNumber = 69;
   const [image, setImage] = useState<ImageListType | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -43,7 +45,8 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
         title: 'Image Uploaded',
         description: json.message,
         variant:'default'
-      })
+      });
+      conversationDispatch({ type: 'CHANGE_GROUP_AVATAR', payload: { conversationId: userIdOrConversationId!, newGroupAvatar: croppedImage.split(',')[1] } })
     }
     else {
       toast({
@@ -100,7 +103,7 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
           maxNumber={maxNumber}
         >
           {({ onImageUpload }) => (
-            <button onClick={onImageUpload} className='bg-none text-xs'>
+            <button onClick={onImageUpload} className='bg-gray-600 text-slate-50 text-xs px-3 py-2 rounded-md hover:bg-gray-500 absolute'>
               Change Avatar
             </button>
           )}
@@ -124,9 +127,10 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
             />
 
           </div>
-        
-            <button onClick={showCroppedImage} className='text-slate-50 bg-orange-500 my-2 rounded-sm p-2'>Save</button>
-            <button onClick={cancelCrop} className='text-orange-500 bg-none border-2 border-orange-500 my-2 rounded-sm p-2'>Cancel</button>
+            <div className='w-1/2 flex flex-row-reverse gap-2 ml-auto'>
+              <button onClick={showCroppedImage} className='text-slate-50 bg-orange-500 rounded-sm py-2 px-5 hover:opacity-80'>Save</button>
+              <button onClick={cancelCrop} className='text-orange-500 bg-none border-2 border-orange-500 rounded-sm py-2 px-3 hover:opacity-80'>Cancel</button>
+            </div>
 
         </div>
       )}

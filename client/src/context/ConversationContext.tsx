@@ -1,19 +1,23 @@
 import { createContext, useReducer, ReactNode, useContext } from "react";
 
 // Interfaces
-import { userInterface, MessagesInterface, ConversationInterface, UserConversation } from "../ts/interfaces/Conversation_interface";
+import { userInterface, MessagesInterface, ConversationInterface, UserConversation, participantsInterface } from "../ts/interfaces/Conversation_interface";
 
 type ConversationAction =
   | { type: 'SET_CONVERSATIONS'; payload: ConversationInterface[] }
   | { type: 'UPDATE_CONVERSATIONS'; payload: { conversationId: string; newMessage: MessagesInterface } }
   | { type: 'SET_USER'; payload: userInterface }
-  | { type: 'SET_CLICK_CONVERSATION'; payload: ConversationInterface }
+  | { type: 'SET_CLICK_CONVERSATION'; payload: ConversationInterface | null }
   | { type: 'ADD_MESSAGE'; payload: MessagesInterface }
   | { type: 'LEAVE_GROUP'; payload: ConversationInterface }
   | { type: 'USER_BLOCKED_USERS'; payload: userInterface[] }
   | { type: 'BLOCK_USER'; payload: userInterface }
   | { type: 'UNBLOCK_USER'; payload: userInterface }
   | { type: 'NEW_CONVERSATION'; payload: ConversationInterface }
+  | { type: 'LOAD_MESSAGE'; payload: MessagesInterface[] }
+  | { type: 'ADD_GROUP_MEMBER'; payload: participantsInterface[] }
+  | { type: 'REMOVE_GROUP_MEMBER'; payload: string[] }
+  | { type: 'CHANGE_GROUP_AVATAR'; payload: { conversationId: string; newGroupAvatar: string } }
 
 type ConversationContextType = {
   conversations: ConversationInterface[] | null;
@@ -21,6 +25,7 @@ type ConversationContextType = {
   conversation: ConversationInterface | null;
   blockedUsers: userInterface[];
   dispatch: React.Dispatch<ConversationAction>;
+  conversationDispatch: React.Dispatch<ConversationAction>;
 }
 
 export const ConversationContext = createContext<ConversationContextType | undefined>(undefined);
@@ -36,11 +41,11 @@ export const conversationReducer = (state: UserConversation, action: Conversatio
     case 'UPDATE_CONVERSATIONS':
       return {
         ...state,
-        conversations: state.conversations ? 
+        conversations: state.conversations ?
           state.conversations.map(c =>
-            c._id === action.payload.conversationId ? 
-            { ...c, messages: [...c.messages!, action.payload.newMessage] }
-            : c
+            c._id === action.payload.conversationId ?
+              { ...c, messages: [...c.messages!, action.payload.newMessage] }
+              : c
           )
           : state.conversations
       }
@@ -62,6 +67,41 @@ export const conversationReducer = (state: UserConversation, action: Conversatio
           messages: [...state.conversation.messages!, action.payload]
         } : null
       };
+    case 'LOAD_MESSAGE':
+      return {
+        ...state,
+        conversation: state.conversation ? {
+          ...state.conversation,
+          messages: [...action.payload, ...state.conversation.messages!]
+        } : null
+      };
+    case 'CHANGE_GROUP_AVATAR':
+      return {
+        ...state,
+        conversations: state.conversations ?
+          state.conversations.map(c =>
+            c._id === action.payload.conversationId ?
+              {...c, groupAvatar: action.payload.newGroupAvatar }
+              : c
+          )
+          : state.conversations
+      };
+    case 'ADD_GROUP_MEMBER':
+      return {
+        ...state,
+        conversation: state.conversation ? {
+          ...state.conversation,
+          participants: [...state.conversation.participants!, ...action.payload]
+        } : null
+      };
+    case 'REMOVE_GROUP_MEMBER':
+      return {
+        ...state,
+        conversation: state.conversation? {
+         ...state.conversation,
+          participants: state.conversation.participants!.filter(p => !action.payload.includes(p.user._id))
+        } : null
+      };
     case 'LEAVE_GROUP':
       return {
         ...state,
@@ -80,11 +120,11 @@ export const conversationReducer = (state: UserConversation, action: Conversatio
     case 'UNBLOCK_USER':
       return {
         ...state,
-        blockedUsers: state.blockedUsers!.filter(u => u._id!== action.payload._id)
+        blockedUsers: state.blockedUsers!.filter(u => u._id !== action.payload._id)
       }
     case 'NEW_CONVERSATION':
       return {
-       ...state,
+        ...state,
         conversations: [action.payload, ...state.conversations!]
       }
     default:
@@ -101,7 +141,7 @@ export const ConversationProvider = ({ children }: { children: ReactNode }) => {
   });
 
   return (
-    <ConversationContext.Provider value={{ ...state, dispatch }}>
+    <ConversationContext.Provider value={{ ...state, dispatch, conversationDispatch: dispatch }}>
       {children}
     </ConversationContext.Provider>
   );

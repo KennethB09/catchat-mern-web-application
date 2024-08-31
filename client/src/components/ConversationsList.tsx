@@ -30,14 +30,14 @@ export default function ConversationList({ conversation, onClickConversation }: 
   };
 
   return (
-    <div onClick={conversationClick} className='flex p-2 h-14 hover:bg-gray-200 dark:hover:bg-slate-800 cursor-pointer'>
+    <div onClick={conversationClick} className='flex items-center p-2 h-min hover:bg-gray-300 dark:hover:bg-slate-800 cursor-pointer rounded-md'>
       {conversation.conversationType == 'personal' ? (
         <>
-          <div className='aspect-square'>
-            <img className="w-full h-full rounded-full" src={avatar[0].user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${avatar[0].user.userAvatar}`} />
+          <div className=''>
+            <img className="w-16 rounded-full" alt='user avatar' src={avatar[0].user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${avatar[0].user.userAvatar}`} />
           </div>
           <div className='ml-4 w-full'>
-            <div className='text-orange-500 dark:text-slate-50'>
+            <div className='text-gray-700 dark:text-slate-50'>
               <strong>{recipientUser[0].user.username}</strong>
             </div>
             {newMessage![0] && (
@@ -52,11 +52,11 @@ export default function ConversationList({ conversation, onClickConversation }: 
         </>
       ) : (
         <>
-          <div className='aspect-square'>
-            <img className="w-full h-full rounded-full" src={conversation.groupAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${conversation.groupAvatar}`} />
+          <div className=''>
+            <img className="w-16 rounded-full" alt='group avatar' src={conversation.groupAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${conversation.groupAvatar}`} />
           </div>
           <div className='ml-4 w-full'>
-            <div className='text-orange-500 dark:text-slate-50'>
+            <div className='text-gray-700 dark:text-slate-50'>
               <strong>{conversation.conversationName}</strong>
             </div>
             {newMessage![0] && (
