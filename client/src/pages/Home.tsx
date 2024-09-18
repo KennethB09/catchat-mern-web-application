@@ -1,4 +1,5 @@
 import { socket } from '../socket';
+import { useNavigate } from 'react-router-dom';
 // Hooks
 import { useState, useEffect, useRef } from 'react';
 // Components
@@ -13,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthContext } from '../context/AuthContext';
 import { useConversationContext } from '../context/ConversationContext';
 import { useToastContext } from '@/hooks/useToast';
+import { useLogout } from '@/hooks/useLogout';
 // Interfaces
 import { ConversationInterface, MessagesInterface, userInterface } from '../ts/interfaces/Conversation_interface';
 
@@ -28,6 +30,8 @@ export default function Home() {
     const [currentConversation, setCurrentConversation] = useState('');
     const { toast } = useToastContext();
     const viewport = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
+    const { logout } = useLogout();
 
     // Toggle function to show the Conversation component
     function onClick() {
@@ -82,6 +86,13 @@ export default function Home() {
                 dispatch({ type: 'SET_CONVERSATIONS', payload: data });
                 setIsConversationLoading(false);
             } else {
+                switch (data.status) {
+                    case 440:
+                        logout()
+                        navigate('/login')
+                        return
+                    default:
+                }
                 toast({
                     title: "Ops, something went wrong",
                     description: data.error,
