@@ -6,7 +6,6 @@ import { userInterface, ConversationInterface } from "../ts/interfaces/Conversat
 // Components
 import SearchBar from "./SearchBar";
 import Navigation from "./Navigation";
-import blankAvatar from '../assets/avatar/blank avatar.jpg';
 import CreateGroup from "./CreateConversation";
 // UI component
 import {
@@ -18,6 +17,7 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import Image from './Image';
 
 interface dataInterface {
     conversation: ConversationInterface;
@@ -118,7 +118,7 @@ export default function Header({ onlineUsers, setIsLoading, onClickUser, isOnlin
                     <div className="pt-4 pb-2 flex flex-row gap-3 no-scrollbar overflow-x-scroll h-min w-full">
                         {onlineUsers && onlineUsers.map(users => (
                             <div key={users._id}>
-                                <img className="w-12 h-12 rounded-full border-solid border-orange-500 border-2" src={users.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${users.userAvatar}`} alt={users.username} />
+                                <Image className="w-12 h-12 rounded-full border-solid border-orange-500 border-2" alt={users.username} imageSource={users.userAvatar}/>
                             </div>
                         ))}
                     </div>

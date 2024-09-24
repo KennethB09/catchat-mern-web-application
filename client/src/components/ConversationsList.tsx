@@ -1,9 +1,7 @@
 // Context
 import { useAuthContext } from '../context/AuthContext';
-
+import Image from './Image';
 import { format } from 'date-fns';
-// Assets
-import blankAvatar from '../assets/avatar/blank avatar.jpg'
 // Interfaces
 import { ConversationInterface, participantsInterface, userInterface } from '../ts/interfaces/Conversation_interface';
 
@@ -16,7 +14,6 @@ export default function ConversationList({ conversation, onClickConversation }: 
 
   const { user } = useAuthContext();
   const conversationType = conversation.conversationType;
-
   const recipientUser: participantsInterface[] = conversation.participants.filter(participant => participant.user._id !== user.userId);
 
   const newMessage = conversation.messages?.sort((a, b) => {
@@ -34,7 +31,7 @@ export default function ConversationList({ conversation, onClickConversation }: 
       {conversation.conversationType == 'personal' ? (
         <>
           <div className=''>
-            <img className="w-16 rounded-full" alt='user avatar' src={avatar[0].user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${avatar[0].user.userAvatar}`} />
+            <Image className="w-16 rounded-full" alt='user avatar' imageSource={avatar[0].user.userAvatar} imageOf='personal'/>
           </div>
           <div className='ml-4 w-full'>
             <div className='text-gray-700 dark:text-slate-50'>
@@ -53,7 +50,7 @@ export default function ConversationList({ conversation, onClickConversation }: 
       ) : (
         <>
           <div className=''>
-            <img className="w-16 rounded-full" alt='group avatar' src={conversation.groupAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${conversation.groupAvatar}`} />
+            <Image className="w-16 rounded-full" alt='group avatar' imageSource={conversation.groupAvatar} imageOf='group'/>
           </div>
           <div className='ml-4 w-full'>
             <div className='text-gray-700 dark:text-slate-50'>

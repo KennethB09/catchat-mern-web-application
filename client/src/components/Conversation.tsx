@@ -4,8 +4,6 @@ import { socket } from '../socket';
 import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from '../context/AuthContext';
 import { useToastContext } from '@/hooks/useToast';
-// Assets
-import blankAvatar from '../assets/avatar/blank avatar.jpg';
 // UI Components
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 // Components
 import ConversationInfo from "./ConversationInfo";
+import Image from "./Image";
 // Interfaces
 import { MessagesInterface } from "../ts/interfaces/Conversation_interface";
 
@@ -172,14 +171,14 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     <div className="flex gap-3 items-center">
                         {conversation?.conversationType == 'personal' || conversation === null ?
                             <>
-                                <img className="w-10 h-10 rounded-full" src={recipientUser?.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${recipientUser?.userAvatar}`} />
+                                <Image className="w-10 h-10 rounded-full" imageSource={recipientUser?.userAvatar} imageOf="personal"/>
 
                                 <div className="flex flex-col content-center text-orange-500 dark:text-slate-50">
                                     <strong>{recipientUser?.username}</strong>
                                     <div className={`${recipientUser?.userStatus === 'online' ? 'text-green-500' : 'text-red-500'} flex items-center gap-1 h-min`}>
                                         <svg className={`${recipientUser?.userStatus === 'online' ? 'fill-green-500' : 'fill-red-500'} w-2 h-2`} viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" fill="#000000">
-                                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                                            <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round">
                                             </g>
                                             <g id="SVGRepo_iconCarrier">
                                                 <circle cx="6" cy="6" r="6" >
@@ -193,7 +192,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             :
                             <>
                                 <div className="">
-                                    <img className="w-10 h-10 rounded-full" src={conversation?.groupAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${conversation?.groupAvatar}`} />
+                                    <Image className="w-10 h-10 rounded-full" imageSource={conversation?.groupAvatar} imageOf="group"/>
                                 </div>
                                 <div className="text-orange-500 dark:text-slate-50">
                                     <strong>{conversation?.conversationName}</strong>
@@ -241,7 +240,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                         </div>
                                         :
                                         <div className="flex gap-3">
-                                            <img className="w-6 h-6 rounded-full mt-auto" src={m.sender.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${m.sender.userAvatar}`} />
+                                            <Image className="w-6 h-6 rounded-full mt-auto" imageSource={m.sender.userAvatar} imageOf="personal"/>
                                             <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl animate-append-animate'}>{m.content}</p>
                                         </div>
                                     }
@@ -258,7 +257,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                         </div>
                                         :
                                         <div className="flex gap-3">
-                                            <img className="w-6 h-6 rounded-full mt-auto" src={m.sender.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${m.sender.userAvatar}`} />
+                                            <Image className="w-6 h-6 rounded-full mt-auto" imageSource={m.sender.userAvatar} imageOf="personal"/>
                                             <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl animate-append-animate'}>{m.content}</p>
                                         </div>
                                     }

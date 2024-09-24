@@ -3,8 +3,6 @@ import { useState } from 'react';
 import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from "../context/AuthContext";
 import { useToastContext } from '@/hooks/useToast';
-// Assets
-import blankAvatar from '../assets/avatar/blank avatar.jpg';
 // UI Components
 import GroupMembers from './GroupMembers';
 import UploadImage from "../components/UploadImage";
@@ -18,6 +16,7 @@ import {
     SheetClose,
     SheetTrigger,
 } from "@/components/ui/sheet";
+import Image from "./Image";
 
 type ConversationInfoProps = {
     isUserBlocked: boolean | null;
@@ -31,9 +30,56 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
     const { user } = useAuthContext();
     const { toast } = useToastContext();
     const [changeProfile, setChangeProfile] = useState(false);
+    const [isChangeGroupName, setIsChangeGroupName] = useState(false);
+    const [groupName, setGroupName] = useState('');
 
     const toggleProfile = () => {
         setChangeProfile(prev =>!prev);
+    };
+
+    const toggleGroupName = () => {
+        setIsChangeGroupName(prev =>!prev);
+    }
+
+    const changeGroupName = async () => {
+
+        if (groupName === "") {
+            toast({
+                title: "Note",
+                description: "Group name cannot be empty",
+                variant: 'default'
+            })
+            return
+        };
+
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/catchat/api/conversation-change-group-name`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${user.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                groupId: conversation?._id,
+                newGroupName: groupName
+            })
+        });
+
+        const json = await response.json();
+
+        if (response.ok) {
+            toast({
+                title: "",
+                description: json.message,
+                variant:'default'
+            });
+            setGroupName('');
+        } else {
+            toast({
+                title: "Ops, something when't wrong",
+                description: json.message,
+                variant: 'destructive'
+            })
+        }
     };
 
     const leaveGroup = async () => {
@@ -127,7 +173,7 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
             {conversation?.conversationType == 'personal' ?
                 <>
                     <div className="max-w-fit mx-auto mt-9 pb-2 relative">
-                        <img src={recipientUser?.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${recipientUser?.userAvatar}`} className="w-24 rounded-full" />
+                        <Image className="w-24 rounded-full" imageSource={recipientUser?.userAvatar} imageOf='personal'/>
                     </div>
                     <div className="border-b-[1px] border-gray-400 pb-3 mb-4 dark:text-slate-50">
                         <div className="text-center text-xl font-bold pb-3">
@@ -139,12 +185,28 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
                 :
                 <>
                     <div className="max-w-fit mx-auto mt-9 pb-2 text-center">
-                        <img src={conversation?.groupAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${conversation?.groupAvatar}`} className="w-24 rounded-full cursor-pointer" onClick={toggleProfile} />
+                        <Image className="w-24 rounded-full cursor-pointer" onClick={toggleProfile} imageSource={conversation?.groupAvatar} imageOf='group'/>
                         {changeProfile && conversation !== null && <UploadImage uploadPurpose='change_group_image' userIdOrConversationId={conversation?._id}/>}
                     </div>
                     <div className="text-orange-500 border-b-[1px] border-gray-400 pb-3 mb-4 dark:text-slate-50">
-                        <div className="text-center text-xl font-bold pb-3">
-                            <h1 className='text-gray-600 dark:text-slate-50 text-lg'>{conversation?.conversationName}</h1>
+                        <div className="text-center text-xl font-bold pb-3 min-h-7">
+                            {isChangeGroupName ?
+                                <div className="w-full flex flex-col">
+                                    <input
+                                        type="text"
+                                        className="w-full bg-transparent border-b-[1px] border-orange-500 text-sm focus-within:outline-none mb-2"
+                                        value={groupName}
+                                        onChange={(e) => setGroupName(e.target.value)}
+                                        placeholder='New group name'
+                                    />
+                                    <div className="ml-auto flex gap-2">
+                                        <Button className='bg-orange-500 text-slate-50 hover:bg-orange-600' size={'sm'} variant={"default"} onClick={changeGroupName}>Save</Button>
+                                        <Button size={'sm'} variant={"destructive"} onClick={toggleGroupName}>Cancel</Button>
+                                    </div>
+                                </div>
+                                :
+                                <h1 className='text-gray-600 dark:text-slate-50 text-lg cursor-pointer' onClick={toggleGroupName}>{conversation?.conversationName}</h1>
+                            }
                         </div>
                     </div>
                 </>

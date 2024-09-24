@@ -2,10 +2,9 @@ import { useState } from 'react';
 import UploadImage from "../components/UploadImage";
 import { useAuthContext } from '../context/AuthContext';
 import { useLogout } from '../hooks/useLogout';
-import blankAvatar from '../assets/avatar/blank avatar.jpg'
 import { ModeToggle } from "./mode-toggle";
-import { Button } from "@/components/ui/button"
-
+import { Button } from "@/components/ui/button";
+import Image from './Image';
 
 export default function Navigation() {
 
@@ -20,7 +19,7 @@ export default function Navigation() {
     return (
         <nav className="flex flex-col h-full">
             <div className="max-w-fit mx-auto mt-9 pb-2 text-center">
-                <img src={user.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${user.userAvatar}`} className="w-24 rounded-full cursor-pointer" onClick={toggleProfile} />
+                <Image className="w-24 rounded-full cursor-pointer" imageSource={user.userAvatar} imageOf='personal' onClick={toggleProfile}/>
                 {changeProfile && <UploadImage uploadPurpose='change_user_avatar' userIdOrConversationId={user.userId}/>}
             </div>
             <div className=" border-b-[1px] border-gray-400  dark:border-gray-300 pb-3 mb-4 dark:text-slate-50">

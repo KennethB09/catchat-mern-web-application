@@ -1,8 +1,64 @@
 const User = require('../models/UserModel');
 const jwt = require('jsonwebtoken');
+const Imagekit = require('imagekit');
 const { OAuth2Client } = require('google-auth-library');
 
 const client = new OAuth2Client();
+const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+
+const imagekit = new Imagekit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+});
+
+const isBase64 = async (userId, image) => {
+    const isBase64 = base64regex.test(image);
+    let imagekitImg
+    let imageId
+
+    if(isBase64) {
+        await imagekit.upload({
+            file : image, //required
+            fileName : userId,
+            folder: "Users_Avatar",  //required
+            extensions: [
+                {
+                    name: "google-auto-tagging",
+                    maxTags: 5,
+                    minConfidence: 95
+                }
+            ],
+            transformation: {
+                pre: 'r-max',
+                post: [
+                    {
+                        type: 'transformation',
+                        value: 'w-100'
+                    }
+                ]
+            }
+        }).then(response => {
+            console.log(response);
+            imagekitImg = response.name;
+            imageId = response.fileId;
+        }).catch(error => {
+            console.log(error);
+        });
+
+        await User.updateOne({
+            _id: userId
+        }, {
+            $set: {
+                userAvatar: imagekitImg,
+                imageId: imageId
+            }
+        });
+    } else {
+        return image
+    }
+    return imagekitImg;
+}
 
 // Middleware to verify token
 const createToken = (_id) => {
@@ -53,9 +109,18 @@ const googleOAuthSignIn = async (req, res) => {
 
         const user = await User.login(authSource, email, password);
 
+        const image = await isBase64(user._id, user.userAvatar);
+        const imageURL = imagekit.url({
+            src : `${process.env.IMAGEKIT_URL_ENDPOINT}/Users_Avatar/${image}`,
+            transformation : [{
+                "height" : "300",
+                "width" : "400"
+            }]
+        });
+
         const token = createToken(user._id);
 
-        res.status(200).json({username: user.username, email, token, userId: user._id, userAvatar: user.userAvatar})
+        res.status(200).json({username: user.username, email, token, userId: user._id, userAvatar: imageURL})
 
     } catch (error) {
         console.log(error.message);
@@ -84,9 +149,18 @@ const loginUser = async (req, res) => {
     try {
         const user = await User.login(authSource, email, password);
 
+        const image = await isBase64(user._id, user.userAvatar);
+        const imageURL = imagekit.url({
+            src : `${process.env.IMAGEKIT_URL_ENDPOINT}/Users_Avatar/${image}`,
+            transformation : [{
+                "height" : "300",
+                "width" : "300"
+            }]
+        });
+
         const token = createToken(user._id);
 
-        res.status(200).json({username: user.username, email, token, userId: user._id, userAvatar: user.userAvatar})
+        res.status(200).json({username: user.username, email, token, userId: user._id, userAvatar: imageURL})
     } catch (error) {
         res.status(400).json({error: error.message})
     }

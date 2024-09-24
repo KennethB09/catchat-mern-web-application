@@ -43,6 +43,7 @@ export const useGoogleSignUp = () => {
         oAuthError,
         GoogleLogin: (
             <GoogleLogin 
+                width={"100vw"}
                 onSuccess={googleSignUp}
                 onError={handleOAuthError}
             />

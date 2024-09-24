@@ -29,6 +29,11 @@ const conversationSchema = new Schema({
         required: false
     },
 
+    imageId: {
+        type: String,
+        required: false
+    },
+
     conversationName: {
         type: String,
         required: false

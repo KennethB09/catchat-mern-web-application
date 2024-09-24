@@ -1,6 +1,72 @@
 const User = require('../models/UserModel');
 const { Conversation } = require('../models/ConversationModel');
 const mongoose = require('mongoose');
+const Imagekit = require('imagekit');
+
+const imagekit = new Imagekit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+});
+
+const upload_image = async (id, image, purpose) => {
+    let image_kit_Img = {};
+    const folder = purpose === "change_user_avatar" ? "Users_Avatar" : "Groups_Avatar";
+
+    if (purpose === "change_user_avatar") {
+        const user = await User.find({ _id: id }, { imageId: 1 });
+
+        if(user[0].imageId !== "") {
+            await imagekit.deleteFile(user[0].imageId).then(response => {
+                console.log(response);
+            }).catch(error => {
+                console.log(error);
+            });
+        };
+    } else {
+        const group = await Conversation.find({ _id: id }, { imageId: 1 });
+
+        if(group[0].imageId !== "") {
+            await imagekit.deleteFile(group[0].imageId).then(response => {
+                console.log(response);
+            }).catch(error => {
+                console.log(error);
+            });
+        };
+    }
+
+    await imagekit.upload({
+        file : image, //required
+        fileName : id,
+        folder: folder,  //required
+        extensions: [
+            {
+                name: "google-auto-tagging",
+                maxTags: 5,
+                minConfidence: 95
+            }
+        ],
+        transformation: {
+            pre: 'r-max',
+            post: [
+                {
+                    type: 'transformation',
+                    value: 'w-100'
+                }
+            ]
+        }
+    }).then(response => {
+        console.log(response);
+        image_kit_Img = {
+            id: response.fileId,
+            image: response.name
+        };
+    }).catch(error => {
+        console.log(error);
+    });
+
+    return image_kit_Img;
+};
 
 const searchUser = async (req, res) => {
     const { username } = req.query;
@@ -364,10 +430,11 @@ const getConversation = async (req, res) => {
                 },
             }
         ]).sort({ updatedAt: -1 });
+
         if (conversations.length === 0) {
             return res.status(200).json(conversations);
         }
-
+        
         res.status(200).json(conversations);
     } catch (error) {
         console.log(error.message)
@@ -493,26 +560,34 @@ const postImageOrAvatar = async (req, res) => {
 
     try {
         if (purpose === 'change_user_avatar') {
+
+            const imagekitImage = await upload_image(userIdOrConversationId, extractImage, purpose);
+
             await User.updateOne({
                 _id: userIdOrConversationId
             }, {
                 $set: {
-                    userAvatar: extractImage
+                    userAvatar: imagekitImage.image,
+                    imageId: imagekitImage.id
                 }
             });
-        }
+        };
 
         if (purpose === 'change_group_image') {
+
+            const imagekitImage = await upload_image(userIdOrConversationId, extractImage, purpose);
+
             await Conversation.updateOne({
                 _id: userIdOrConversationId
             }, {
                 $set: {
-                    groupAvatar: extractImage
+                    groupAvatar: imagekitImage.image,
+                    imageId: imagekitImage.id
                 }
             });
         }
 
-        res.json({ message: 'Image updated' })
+        res.json({ message: 'Avatar updated successfully' })
     } catch (error) {
         console.log(error.message)
         res.status(400).json({ error: error.message })
@@ -784,6 +859,23 @@ const leaveGroup = async (req, res) => {
     }
 };
 
+const changeGroupName = async (req, res) => {
+    const { groupId, newGroupName } = req.body;
+    try {
+        await Conversation.updateOne({
+            _id: groupId
+        },
+            {
+                $set: { conversationName: newGroupName }
+            }
+        );
+        res.status(200).json({ message: 'Group name changed successfully' });
+    } catch (error) {
+        console.error('Error changing group name:', error);
+        res.status(500).json({ message: 'An error occurred while changing the group name' });
+    }
+};
+
 const getUserBlockedUsers = async (req, res) => {
     const user = req.user._id;
     try {
@@ -849,5 +941,6 @@ module.exports = {
     leaveGroup,
     getUserBlockedUsers,
     blockUser,
-    unBlockUser
+    unBlockUser,
+    changeGroupName
 };

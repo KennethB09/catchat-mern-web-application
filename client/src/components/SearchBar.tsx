@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
 import { userInterface } from "../ts/interfaces/Conversation_interface";
-import blankAvatar from '../assets/avatar/blank avatar.jpg'
+import Image from "./Image";
 
 type SearchBarProps = {
     handleClick?: (param: any) => void;
@@ -84,7 +84,9 @@ export default function SearchBar({ handleClick, type, placeholder }: SearchBarP
                             <>
                                 {u._id !== user.userId &&
                                     <div key={u._id} onClick={() => handleClick!(u._id)} className="w-full bg-opacity-30 p-2 rounded-md mt-1 text-slate-50 backdrop-blur-sm flex items-center space-x-4 hover:bg-gray-500 dark:hover:bg-gray-800 cursor-pointer z-50">
-                                        <img className="w-12 h-12 rounded-full" src={u.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${u.userAvatar}`} />
+                                        
+                                        <Image className="w-12 h-12 rounded-full" imageSource={u.userAvatar} imageOf="personal"/>
+
                                         <p>{u.username}</p>
                                     </div>
                                 }
@@ -98,7 +100,9 @@ export default function SearchBar({ handleClick, type, placeholder }: SearchBarP
                                         <div key={u._id} className="relative flex items-center py-[1px] h-min hover:bg-gray-400 dark:hover:bg-gray-800 rounded-sm">
                                             <input type="checkbox" name='search_user' value={u._id} onChange={() => handleClick!(u)} className='absolute peer z-auto appearance-none w-full h-full cursor-pointer' />
                                             <label htmlFor='search_user' className='w-full gap-3 flex items-center peer-checked:bg-slate-300 peer-checked:dark:bg-slate-600 rounded-md p-2'>
-                                                <img className="w-12 h-12 rounded-full" src={u.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${u.userAvatar}`} />
+                                                
+                                                <Image className="w-12 h-12 rounded-full" imageSource={u.userAvatar} imageOf="personal"/>
+                                                
                                                 <h1 className="text-slate-50">{u.username}</h1>
                                             </label>
                                         </div>

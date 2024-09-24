@@ -37,6 +37,11 @@ const userSchema = new Schema({
         required: false
     },
 
+    imageId: {
+        type: String,
+        required: false
+    },
+
     userStatus: {
         type: String,
         required: false

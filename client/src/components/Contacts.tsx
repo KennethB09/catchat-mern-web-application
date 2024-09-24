@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-
+import Image from './Image';
 import { useAuthContext } from '../context/AuthContext';
 import { useToastContext } from '@/hooks/useToast';
 import { useConversationContext } from '@/context/ConversationContext';
 import { ConversationInterface, userInterface } from '@/ts/interfaces/Conversation_interface';
 import { Skeleton } from "@/components/ui/skeleton";
-import blankAvatar from '../assets/avatar/blank avatar.jpg';
 
 type ContactsProps = {
   contactClick: (conversationType: string, recipientUser: userInterface, conversation: ConversationInterface) => void
@@ -61,36 +60,36 @@ function Contacts({ contactClick }:ContactsProps) {
     <section className='px-4'>
       <div className='w-full flex justify-between pb-2'>
         <input
-          className='w-3/5 bg-transparent border-b-[1px] border-orange-500 text-xs focus-within:outline-none'
+          className='w-3/5 bg-transparent border-b-[1px] border-orange-500 text-sm focus-within:outline-none'
           type='text'
           value={filter}
           onChange={e => setFilter(e.target.value.toLowerCase())}
           placeholder='Search by username...'
         />
-        <button onClick={() => setFilter('')} className='text-xs text-gray-600 dark:text-slate-50 hover:text-orange-500'>un-filter</button>
+        <button onClick={() => setFilter('')} className='text-sm text-gray-600 dark:text-slate-50 hover:text-orange-500'>un-filter</button>
       </div>
       <div className='flex gap-2'>
         <div className='w-full'>
           {!isLoading ?
             <>
               {contacts?.map(c => (
-                <>
+                <div key={c._id}>
                   {filter === '' ?
                     <div key={c._id} className='flex items-center p-2 gap-3 h-14 hover:bg-gray-300 dark:hover:bg-slate-800 cursor-pointer rounded-md' onClick={() => onClickContact(c._id)}>
-                      <img className="w-10 h-10 rounded-full" src={c.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${c.userAvatar}`} alt={c.username} />
+                      <Image className="w-10 h-10 rounded-full" imageSource={c.userAvatar} imageOf='personal'/>
                       <h1 className='text-gray-700 dark:text-slate-50 font-semibold'>{c.username}</h1>
                     </div>
                     :
                     <>
                       {c.username.includes(filter) &&
                         <div key={c._id} className='flex items-center p-2 gap-3 h-14 hover:bg-gray-300 dark:hover:bg-slate-800 cursor-pointer rounded-md'>
-                          <img className="w-10 h-10 rounded-full" src={c.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${c.userAvatar}`} alt={c.username} />
+                          <Image className="w-10 h-10 rounded-full" imageSource={c.userAvatar} imageOf='personal'/>
                           <h1 className='text-gray-600 dark:text-slate-50'>{c.username}</h1>
                         </div>
                       }
                     </>
                   }
-                </>
+                </div>
               )
               )}
             </>
@@ -108,7 +107,7 @@ function Contacts({ contactClick }:ContactsProps) {
         </div>
         <ul className='flex flex-col w-min h-full'>
           {'abcdefghijklmnopqrstuvwxyz'.split('').map(i => (
-            <li key={i} className='text-[8px] text-gray-600 dark:text-slate-50 h-min leading-tight uppercase hover:text-orange-500 cursor-pointer' onClick={() => setFilter(i)}>{i}</li>
+            <li key={i} className='text-[13px] text-gray-600 dark:text-slate-50 h-min leading-tight uppercase hover:text-orange-500 cursor-pointer' onClick={() => setFilter(i)}>{i}</li>
           ))
           }
         </ul>

@@ -3,7 +3,7 @@ import ImageUploading, { ImageListType } from "react-images-uploading";
 import Cropper from "react-easy-crop";
 import { useAuthContext } from "../context/AuthContext";
 import { getCroppedImg } from '../utility/cropImage';
-import { useToastContext } from '@/hooks/useToast'; 
+import { useToastContext } from '@/hooks/useToast';
 import { useConversationContext } from '@/context/ConversationContext';
 
 interface CroppedAreaPixels {
@@ -44,11 +44,18 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
       toast({
         title: 'Image Uploaded',
         description: json.message,
-        variant:'default'
+        variant: 'default'
       });
-      conversationDispatch({ type: 'CHANGE_GROUP_AVATAR', payload: { conversationId: userIdOrConversationId!, newGroupAvatar: croppedImage.split(',')[1] } })
-    }
-    else {
+
+      if (uploadPurpose === 'change_user_avatar') {
+        // Update the user avatar in local storage
+        user.userAvatar = croppedImage.split(',')[1];
+        localStorage.setItem('user', JSON.stringify(user));
+        dispatch({ type: 'UPDATE_LOCAL', payload: user });
+      };
+
+      conversationDispatch({ type: 'CHANGE_GROUP_AVATAR', payload: { conversationId: userIdOrConversationId!, newGroupAvatar: croppedImage.split(',')[1] } });
+    } else {
       toast({
         title: "Ops, something when't wrong",
         description: json.message,
@@ -70,12 +77,7 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
       );
       // Here you can send croppedImage to your backend
       handleImageUpload(croppedImage);
-      if (uploadPurpose === 'change_user_avatar') {
-        // Update the user avatar in local storage
-        user.userAvatar = croppedImage.split(',')[1];
-        localStorage.setItem('user', JSON.stringify(user));
-        dispatch({ type: 'UPDATE_LOCAL', payload: user });
-      }
+
       // Reset the value of image to null
       setImage(null);
     } catch (e) {
@@ -93,23 +95,23 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
 
   return (
     <>
-     
 
-        <ImageUploading
-          multiple={false}
-          value={[]}
-          acceptType={['jpg', 'png', 'jpeg']}
-          onChange={onChange}
-          maxNumber={maxNumber}
-        >
-          {({ onImageUpload }) => (
-            <button onClick={onImageUpload} className='bg-gray-600 text-slate-50 text-xs px-3 py-2 rounded-md hover:bg-gray-500 absolute'>
-              Change Avatar
-            </button>
-          )}
-        </ImageUploading>
 
- 
+      <ImageUploading
+        multiple={false}
+        value={[]}
+        acceptType={['jpg', 'png', 'jpeg']}
+        onChange={onChange}
+        maxNumber={maxNumber}
+      >
+        {({ onImageUpload }) => (
+          <button onClick={onImageUpload} className='bg-gray-600 text-slate-50 text-xs px-3 py-2 rounded-md hover:bg-gray-500 absolute'>
+            Change Avatar
+          </button>
+        )}
+      </ImageUploading>
+
+
 
       {image && (
         <div className='absolute w-screen h-screen top-0 right-0 left-0 z-50 flex flex-col space-y-4 p-2 justify-center bg-black'>
@@ -127,10 +129,10 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId }: U
             />
 
           </div>
-            <div className='w-1/2 flex flex-row-reverse gap-2 ml-auto'>
-              <button onClick={showCroppedImage} className='text-slate-50 bg-orange-500 rounded-sm py-2 px-5 hover:opacity-80'>Save</button>
-              <button onClick={cancelCrop} className='text-orange-500 bg-none border-2 border-orange-500 rounded-sm py-2 px-3 hover:opacity-80'>Cancel</button>
-            </div>
+          <div className='w-1/2 flex flex-row-reverse gap-2 ml-auto'>
+            <button onClick={showCroppedImage} className='text-slate-50 bg-orange-500 rounded-sm py-2 px-5 hover:opacity-80'>Save</button>
+            <button onClick={cancelCrop} className='text-orange-500 bg-none border-2 border-orange-500 rounded-sm py-2 px-3 hover:opacity-80'>Cancel</button>
+          </div>
 
         </div>
       )}
