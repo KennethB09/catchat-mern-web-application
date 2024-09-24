@@ -118,7 +118,7 @@ export default function Header({ onlineUsers, setIsLoading, onClickUser, isOnlin
                     <div className="pt-4 pb-2 flex flex-row gap-3 no-scrollbar overflow-x-scroll h-min w-full">
                         {onlineUsers && onlineUsers.map(users => (
                             <div key={users._id}>
-                                <Image className="w-12 h-12 rounded-full border-solid border-orange-500 border-2" alt={users.username} imageSource={users.userAvatar}/>
+                                <Image className="w-12 h-12 rounded-full border-solid border-orange-500 border-2" alt={users.username} imageSource={users.userAvatar} imageOf='personal'/>
                             </div>
                         ))}
                     </div>
