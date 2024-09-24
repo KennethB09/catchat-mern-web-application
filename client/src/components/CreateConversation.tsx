@@ -6,8 +6,7 @@ import { useConversationContext } from '../context/ConversationContext';
 import { useAuthContext } from "../context/AuthContext";
 import { Dispatch, SetStateAction, useState } from "react";
 import { userInterface } from "@/ts/interfaces/Conversation_interface";
-
-import blankAvatar from '../assets/avatar/blank avatar.jpg';
+import Image from "./Image";
 
 type CreateGroupProps = {
     createGroup: () => void;
@@ -108,7 +107,7 @@ export default function CreateGroup({ createGroup, toggleState, setIsLoading }: 
                             className='absolute peer z-auto appearance-none w-full h-full cursor-pointer' 
                         />
                         <label htmlFor='selected_user' className='w-full h-full gap-3 flex items-center  peer-hover:border-orange-500 peer-hover:dark:border-orange-500 border-2 peer-checked:border-gray-400 peer-checked:dark:border-slate-600 rounded-md p-2'>
-                            <img className="w-12 h-12 rounded-full" src={u.userAvatar === undefined ? blankAvatar : `data:image/jpeg;base64,${u.userAvatar}`} />
+                            <Image className="w-12 h-12 rounded-full" imageSource={u.userAvatar} imageOf="personal"/>
                             <h1 className="text-gray-600 dark:text-slate-50 font-semibold">{u.username}</h1>
                         </label>
                     </div>

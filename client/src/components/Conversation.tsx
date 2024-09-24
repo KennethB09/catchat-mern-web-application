@@ -47,7 +47,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
     const isCurrentUserGetBlocked = recipientBlockedUsers.some(id => id === user.userId);
 
     const messagesLength = conversation?.messages?.length;
-    
+
     const loadMoreMessage = async () => {
         const conversationId = conversation?._id;
         setIsLoading(true);
@@ -69,7 +69,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
         if (response.ok) {
             setIsLoading(false);
             dispatch({ type: 'LOAD_MESSAGE', payload: data })
-        
+
         } else {
             setIsLoading(false);
             toast({
@@ -171,7 +171,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     <div className="flex gap-3 items-center">
                         {conversation?.conversationType == 'personal' || conversation === null ?
                             <>
-                                <Image className="w-10 h-10 rounded-full" imageSource={recipientUser?.userAvatar} imageOf="personal"/>
+                                <Image className="w-10 h-10 rounded-full" imageSource={recipientUser?.userAvatar} imageOf="personal" />
 
                                 <div className="flex flex-col content-center text-orange-500 dark:text-slate-50">
                                     <strong>{recipientUser?.username}</strong>
@@ -192,7 +192,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             :
                             <>
                                 <div className="">
-                                    <Image className="w-10 h-10 rounded-full" imageSource={conversation?.groupAvatar} imageOf="group"/>
+                                    <Image className="w-10 h-10 rounded-full" imageSource={conversation?.groupAvatar} imageOf="group" />
                                 </div>
                                 <div className="text-orange-500 dark:text-slate-50">
                                     <strong>{conversation?.conversationName}</strong>
@@ -240,7 +240,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                         </div>
                                         :
                                         <div className="flex gap-3">
-                                            <Image className="w-6 h-6 rounded-full mt-auto" imageSource={m.sender.userAvatar} imageOf="personal"/>
+                                            <Image className="w-6 h-6 rounded-full mt-auto" imageSource={m.sender.userAvatar} imageOf="personal" />
                                             <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl animate-append-animate'}>{m.content}</p>
                                         </div>
                                     }
@@ -257,7 +257,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                         </div>
                                         :
                                         <div className="flex gap-3">
-                                            <Image className="w-6 h-6 rounded-full mt-auto" imageSource={m.sender.userAvatar} imageOf="personal"/>
+                                            <Image className="w-6 h-6 rounded-full mt-auto" imageSource={m.sender.userAvatar} imageOf="personal" />
                                             <p key={i} className={'text-slate-50 bg-orange-500 break-all w-fit text-wrap mr-auto max-w-64 p-2 my-[2px] rounded-bl-sm rounded-br-xl rounded-tl-xl rounded-tr-xl animate-append-animate'}>{m.content}</p>
                                         </div>
                                     }
@@ -267,25 +267,46 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     }
                 </div>
                 {/* Send Message Form */}
-                {isUserBlocked || isCurrentUserBlocked || isCurrentUserGetBlocked ?
-                    <div className="w-full">
-                        <p className="text-center text-slate-500 dark:text-slate-400">You can't reply to this conversation.</p>
-                    </div>
+                {conversation?.conversationType === "personal" ?
+                    <>
+                        {isUserBlocked || isCurrentUserBlocked || isCurrentUserGetBlocked ?
+                            <div className="w-full">
+                                <p className="text-center text-slate-500 dark:text-slate-400">You can't reply to this conversation.</p>
+                            </div>
+                            :
+                            <form onSubmit={handleSubmit} className="flex justify-between items-center gap-2 h-13 px-4 py-2 bg-white dark:bg-slate-900 w-full sm:dark:bg-gray-800">
+                                <textarea className="w-full rounded-lg px-2 py-1 h-7 text-wrap text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
+                                    placeholder="Message"
+                                    value={message}
+                                    onChange={e => setMessage(e.target.value)}
+                                    wrap="soft"
+                                    required
+                                />
+                                <Button variant={'ghost'} className="w-fit p-0" disabled={(conversation === null && recipientUser === null) ? true : false}>
+                                    <svg className="fill-orange-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
+                                        <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z" />
+                                    </svg>
+                                </Button>
+                            </form>
+                        }
+                    </>
                     :
-                    <form onSubmit={handleSubmit} className="flex justify-between items-center gap-2 h-13 px-4 py-2 bg-white dark:bg-slate-900 w-full sm:dark:bg-gray-800">
-                        <textarea className="w-full rounded-lg px-2 py-1 h-7 text-wrap text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
-                            placeholder="Message"
-                            value={message}
-                            onChange={e => setMessage(e.target.value)}
-                            wrap="soft"
-                            required
-                        />
-                        <Button variant={'ghost'} className="w-fit p-0" disabled={(conversation === null && recipientUser === null) ? true : false}>
-                            <svg className="fill-orange-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
-                                <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z" />
-                            </svg>
-                        </Button>
-                    </form>
+                    <>
+                        <form onSubmit={handleSubmit} className="flex justify-between items-center gap-2 h-13 px-4 py-2 bg-white dark:bg-slate-900 w-full sm:dark:bg-gray-800">
+                            <textarea className="w-full rounded-lg px-2 py-1 h-7 text-wrap text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
+                                placeholder="Message"
+                                value={message}
+                                onChange={e => setMessage(e.target.value)}
+                                wrap="soft"
+                                required
+                            />
+                            <Button variant={'ghost'} className="w-fit p-0" disabled={conversation === null}>
+                                <svg className="fill-orange-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
+                                    <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z" />
+                                </svg>
+                            </Button>
+                        </form>
+                    </>
                 }
 
             </div>
