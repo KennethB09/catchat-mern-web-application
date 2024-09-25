@@ -267,7 +267,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     }
                 </div>
                 {/* Send Message Form */}
-                {conversation?.conversationType === "personal" ?
+                {conversation?.conversationType == "personal" ?
                     <>
                         {isUserBlocked || isCurrentUserBlocked || isCurrentUserGetBlocked ?
                             <div className="w-full">
