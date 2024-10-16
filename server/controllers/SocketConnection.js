@@ -44,13 +44,20 @@ function socketConnection (io) {
 
         socket.on('checkBlockedUser', async recipientId => {
             try {
-                const checkBlockedUsers = await User.findById(recipientId);
-
+                const checkBlockedUsers = await User.findById(recipientId, "blockedUser");
                 socket.emit('recipientBlockedUsers', checkBlockedUsers.blockedUser);
             } catch (error) {
                 console.error('Error checking blocked user:', error.message);
             }
         })
+
+        socket.on("typing", (data) => {
+            socket.to(data.roomId).emit('typing', data.typing, data.roomId, data.senderAvatar);
+        });
+
+        socket.on("stopped-typing", (data) => {
+            socket.to(data.roomId).emit('stopped-typing', data.typing, data.roomId)
+        });
 
         socket.on('private message', async (msg, recipientId, senderId) => {
             // Create a new Message
@@ -79,6 +86,17 @@ function socketConnection (io) {
 
                     await newConversation.save();
 
+                    const conversation = await Conversation.findById(newConversation._id).populate('participants.user', 'username userAvatar').populate('messages.sender', 'username userAvatar');
+                      
+                    // Join the sender to new conversation room
+                    socket.join(conversation._id.toString());
+                    // This somehow work, it able to emit the event to sender without notifying the other users
+                    // If you want to emit an event to user itself, just call socket emit. Because .to prevent
+                    // the sender to receive the event
+                    socket.emit('room_created', conversation);
+
+                    socket.to(recipientId).emit('message_request', msg, conversation);
+
                     await User.updateMany({
                         _id: {$in: [senderId, recipientId]}},
                         {
@@ -105,25 +123,6 @@ function socketConnection (io) {
                             }
                         }
                     );
-                    
-                    const conversation = await Conversation.findOne({
-                        participants: {
-                             $all: [
-                                { $elemMatch: { user: senderId } },
-                                { $elemMatch: { user: recipientId } }
-                            ] 
-                        },
-                        conversationType: "personal"
-                    }).populate('participants.user', 'username userAvatar').populate('messages.sender', 'username userAvatar');
-                      
-                    // Join the sender to new conversation room
-                    socket.join(conversation._id.toString());
-                    // This somehow work, it able to emit the event to sender without notifying the other users
-                    // If you want to emit an event to user itself, just call socket emit. Because .to prevent
-                    // the sender to receive the event
-                    socket.emit('room_created', conversation);
-
-                    socket.to(recipientId).emit('message_request', msg, conversation);
 
                     return
                 };
@@ -155,8 +154,6 @@ function socketConnection (io) {
         });
 
         socket.on('disconnect', async () => {
-
-     
 
             const logoutUser = users.filter(u => u.socketId === socket.id);
 

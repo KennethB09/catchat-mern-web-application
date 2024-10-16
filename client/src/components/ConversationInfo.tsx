@@ -29,16 +29,11 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
     const { recipientUser, conversation, dispatch } = useConversationContext();
     const { user } = useAuthContext();
     const { toast } = useToastContext();
-    const [changeProfile, setChangeProfile] = useState(false);
     const [isChangeGroupName, setIsChangeGroupName] = useState(false);
     const [groupName, setGroupName] = useState('');
 
-    const toggleProfile = () => {
-        setChangeProfile(prev =>!prev);
-    };
-
     const toggleGroupName = () => {
-        setIsChangeGroupName(prev =>!prev);
+        setIsChangeGroupName(prev => !prev);
     }
 
     const changeGroupName = async () => {
@@ -70,7 +65,7 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
             toast({
                 title: "",
                 description: json.message,
-                variant:'default'
+                variant: 'default'
             });
             setGroupName('');
         } else {
@@ -173,7 +168,7 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
             {conversation?.conversationType == 'personal' ?
                 <>
                     <div className="max-w-fit mx-auto mt-9 pb-2 relative">
-                        <Image className="w-24 rounded-full" imageSource={recipientUser?.userAvatar} imageOf='personal'/>
+                        <Image className="w-24 rounded-full" imageSource={recipientUser?.userAvatar} imageOf='personal' />
                     </div>
                     <div className="border-b-[1px] border-gray-400 pb-3 mb-4 dark:text-slate-50">
                         <div className="text-center text-xl font-bold pb-3">
@@ -185,8 +180,7 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
                 :
                 <>
                     <div className="max-w-fit mx-auto mt-9 pb-2 text-center">
-                        <Image className="w-24 rounded-full cursor-pointer" onClick={toggleProfile} imageSource={conversation?.groupAvatar} imageOf='group'/>
-                        {changeProfile && conversation !== null && <UploadImage uploadPurpose='change_group_image' userIdOrConversationId={conversation?._id}/>}
+                        <UploadImage uploadPurpose='change_group_image' userIdOrConversationId={conversation?._id} imageOf='group' imageSrc={conversation?.groupAvatar} />
                     </div>
                     <div className="text-orange-500 border-b-[1px] border-gray-400 pb-3 mb-4 dark:text-slate-50">
                         <div className="text-center text-xl font-bold pb-3 min-h-7">

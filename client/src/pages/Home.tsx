@@ -86,18 +86,31 @@ export default function Home() {
                 dispatch({ type: 'SET_CONVERSATIONS', payload: data });
                 setIsConversationLoading(false);
             } else {
+                function errorToast(message: string) {
+                    toast({
+                        title: "Something went wrong",
+                        description: message,
+                        variant: 'destructive'
+                    });
+                };
                 switch (data.status) {
+                    case 400:
+                        errorToast(data.error)
+                        return
+                    case 401:
+                        navigate('/login')
+                        errorToast(data.error)
+                        return
                     case 440:
                         logout()
                         navigate('/login')
+                        errorToast(data.error)
+                        return
+                    case 500:
+                        errorToast(data.error)
                         return
                     default:
                 }
-                toast({
-                    title: "Ops, something went wrong",
-                    description: data.error,
-                    variant: 'destructive'
-                });
                 setIsConversationLoading(false);
             }
         };
@@ -115,7 +128,7 @@ export default function Home() {
                 dispatch({ type: 'USER_BLOCKED_USERS', payload: data })
             } else {
                 toast({
-                    title: "Ops, something went wrong",
+                    title: "Something went wrong",
                     description: data.error,
                     variant: 'destructive'
                 });
@@ -222,7 +235,7 @@ export default function Home() {
             socket.off('onlineContacts');
 
         };
-    }, [socket.connect()]);
+    }, [socket]);
 
     return (
         <main ref={viewport} className='relative no-scrollbar overflow-scroll flex flex-col h-svh w-screen text-sm sm:p-2 sm:flex-row sm:gap-2 sm:bg-gray-300 sm:dark:bg-gray-800 font-roboto'>

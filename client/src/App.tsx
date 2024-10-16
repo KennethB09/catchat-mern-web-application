@@ -37,11 +37,11 @@ function App() {
               />
               <Route
                 path="/login"
-                element={!user ? <Login /> : <Navigate to="/" />}
+                element={!user ? <><Login /><Toaster /></> : <Navigate to="/" />}
               />
               <Route
                 path="/sign-up"
-                element={!user ? <Signup /> : <Navigate to="/" />}
+                element={!user ? <><Signup /><Toaster /></> : <Navigate to="/" />}
               />
             </Routes>
           </div>

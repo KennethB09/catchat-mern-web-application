@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { socket } from '../socket';
 // Context Hooks
 import { useConversationContext } from '../context/ConversationContext';
@@ -36,7 +36,9 @@ export default function Conversation({ onClickConversation, onClick, privateMess
     const newMessageRef = useRef<HTMLDivElement>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
+    const [isTyping, setIsTyping] = useState(false);
+    const [roomId, setRoomId] = useState<string>("");
+    const [senderAvatar, setSenderAvatar] = useState('');
     const [recipientBlockedUsers, setRecipientBlockedUsers] = useState<string[]>([]);
 
     // Check if the recipient user is in current user blocked list.
@@ -81,6 +83,43 @@ export default function Conversation({ onClickConversation, onClick, privateMess
     };
 
     useEffect(() => {
+        let typingTimer: NodeJS.Timeout;
+
+        if(message === "") {
+            typingTimer = setTimeout(() => {
+                socket.emit("stopped-typing", {
+                    roomId: conversation?._id,
+                    typing: false
+                })
+            }, 3000)
+        };
+
+        if(message) {
+            typingTimer = setTimeout(() => {
+                socket.emit("stopped-typing", {
+                    roomId: conversation?._id,
+                    typing: false
+                })
+            }, 3000)
+        };
+
+        return () => {
+            clearTimeout(typingTimer);
+        }
+    });
+
+    useEffect(() => {
+
+        socket.on("typing", (data: boolean, roomId: string, senderAvatar: string) => {
+            setIsTyping(data)
+            setRoomId(roomId)
+            setSenderAvatar(senderAvatar)
+        });
+
+        socket.on("stopped-typing", (data: boolean, roomId: string) => {
+            setIsTyping(data)
+            setRoomId(roomId)
+        });
 
         function handleBlockedUsers(recipientBlockedUsers: string[]) {
             setRecipientBlockedUsers(recipientBlockedUsers);
@@ -92,11 +131,21 @@ export default function Conversation({ onClickConversation, onClick, privateMess
 
         return () => {
             socket.off('recipientBlockedUsers', handleBlockedUsers);
+            
         };
-    }, [socket.on]);
+    }, [socket]);
 
     function onSheetOpen() {
         setSheetOpen(prev => !prev);
+    };
+
+    function handleUserTyping(e: React.ChangeEvent<HTMLTextAreaElement>) {
+        setMessage(e.target.value);
+        socket.emit("typing", {
+            roomId: conversation?._id,
+            typing: true,
+            senderAvatar: user.userAvatar
+        })
     };
 
     const handleSubmit = (e: React.FocusEvent<HTMLFormElement>) => {
@@ -265,6 +314,16 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             )}
                         </>
                     }
+                    {isTyping && roomId === conversation?._id &&
+                        <div className="flex gap-3 mt-3 mb-3">
+                            <Image className="w-6 h-6 rounded-full mt-auto" imageSource={senderAvatar} imageOf="personal" />
+                            <div className='flex space-x-1 justify-center items-center bg-orange-500 rounded-full h-min w-min py-2 px-3'>
+                                <div className='h-1 w-1 bg-slate-50 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
+                                <div className='h-1 w-1 bg-slate-50 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
+                                <div className='h-1 w-1 bg-slate-50 rounded-full animate-bounce'></div>
+                            </div>
+                        </div>
+                    }
                 </div>
                 {/* Send Message Form */}
                 {conversation?.conversationType == "personal" ?
@@ -278,7 +337,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                 <textarea className="w-full rounded-lg px-2 py-1 h-7 text-wrap text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
                                     placeholder="Message"
                                     value={message}
-                                    onChange={e => setMessage(e.target.value)}
+                                    onChange={handleUserTyping}
                                     wrap="soft"
                                     required
                                 />
@@ -296,7 +355,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             <textarea className="w-full rounded-lg px-2 py-1 h-7 text-wrap text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
                                 placeholder="Message"
                                 value={message}
-                                onChange={e => setMessage(e.target.value)}
+                                onChange={handleUserTyping}
                                 wrap="soft"
                                 required
                             />
