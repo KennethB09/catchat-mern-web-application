@@ -57,10 +57,12 @@ export default function ConversationList({ conversation, onClickConversation }: 
               <div className='grid grid-cols-2 w-full text-slate-500'>
                 <div className='w-full'>
                   {isTyping && roomId === conversation?._id ?
-                    <div className='flex space-x-1 justify-center items-center rounded-full h-min w-min py-2 px-3 bg-gray-200 dark:bg-slate-700'>
-                      <div className='h-1 w-1 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
-                      <div className='h-1 w-1 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
-                      <div className='h-1 w-1 bg-slate-500 rounded-full animate-bounce'></div>
+                    <div className='flex space-x-1 justify-center items-center rounded-full h-min w-min px-3 bg-gray-200 dark:bg-slate-700'>
+                      <svg className='fill-slate-500 h-4' fill="hsl(228, 97%, 42%)" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="4" cy="12" r="3"><animate id="spinner_qFRN" begin="0;spinner_OcgL.end+0.25s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" /></circle>
+                        <circle cx="12" cy="12" r="3"><animate begin="spinner_qFRN.begin+0.1s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" /></circle>
+                        <circle cx="20" cy="12" r="3"><animate id="spinner_OcgL" begin="spinner_qFRN.begin+0.2s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" /></circle>
+                      </svg>
                     </div>
                     :
                     <p className='text-ellipsis whitespace-nowrap overflow-hidden'>{newMessage![0].sender._id === user.userId ? 'You: ' + newMessage![0].content : newMessage![0].content}</p>
@@ -83,11 +85,13 @@ export default function ConversationList({ conversation, onClickConversation }: 
             {newMessage![0] && (
               <div className='grid grid-cols-2 w-full text-slate-500'>
                 <div className='w-full'>
-                {isTyping && roomId === conversation?._id ?
-                    <div className='flex space-x-1 justify-center items-center rounded-full h-min w-min py-2 px-3 bg-gray-200 dark:bg-slate-700'>
-                      <div className='h-1 w-1 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
-                      <div className='h-1 w-1 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
-                      <div className='h-1 w-1 bg-slate-500 rounded-full animate-bounce'></div>
+                  {isTyping && roomId === conversation?._id ?
+                    <div className='flex space-x-1 justify-center items-center rounded-full h-min w-min px-3 bg-gray-200 dark:bg-slate-700'>
+                      <svg className='fill-slate-500 h-4' fill="hsl(228, 97%, 42%)" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="4" cy="12" r="3"><animate id="spinner_qFRN" begin="0;spinner_OcgL.end+0.25s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" /></circle>
+                        <circle cx="12" cy="12" r="3"><animate begin="spinner_qFRN.begin+0.1s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" /></circle>
+                        <circle cx="20" cy="12" r="3"><animate id="spinner_OcgL" begin="spinner_qFRN.begin+0.2s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" /></circle>
+                      </svg>
                     </div>
                     :
                     <p className='text-ellipsis whitespace-nowrap overflow-hidden'>{newMessage![0].sender._id === user.userId ? 'You: ' + newMessage![0].content : newMessage![0].content}</p>

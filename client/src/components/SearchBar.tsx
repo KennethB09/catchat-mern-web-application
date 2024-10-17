@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
 import { userInterface } from "../ts/interfaces/Conversation_interface";
 import Image from "./Image";
+import { useToastContext } from '@/hooks/useToast';
 
 type SearchBarProps = {
     handleClick?: (param: any) => void;
@@ -15,6 +16,7 @@ export default function SearchBar({ handleClick, type, placeholder }: SearchBarP
     const [input, setInput] = useState<string>("");
     const [searchResult, setSearchResult] = useState<userInterface[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToastContext();
 
     useEffect(() => {
         setInput('')
@@ -47,8 +49,12 @@ export default function SearchBar({ handleClick, type, placeholder }: SearchBarP
             const data = await response.json();
             setIsLoading(false);
             setSearchResult(data); // Convert to string for display
-        } catch (error) {
-            console.error('Search error:', error);
+        } catch (error: any) {
+            toast({
+                title: "",
+                description: error.message,
+                variant: "destructive"
+            })
         }
     };
 

@@ -2,7 +2,7 @@ import SearchBar from "./SearchBar";
 import { Button } from "@/components/ui/button"
 
 import { useConversationContext } from '../context/ConversationContext';
-
+import { useToastContext } from '@/hooks/useToast';
 import { useAuthContext } from "../context/AuthContext";
 import { Dispatch, SetStateAction, useState } from "react";
 import { userInterface } from "@/ts/interfaces/Conversation_interface";
@@ -21,6 +21,7 @@ export default function CreateGroup({ createGroup, toggleState, setIsLoading }: 
     const [groupName, setGroupName] = useState('');
     const [selectedUsers, setSelectedUsers] = useState<userInterface[]>([]);
     const [isEmpty, setIsEmpty] = useState(false);
+    const { toast } = useToastContext();
 
     const handleUsersSelection = (user: userInterface) => {
         setSelectedUsers(prev => {
@@ -71,7 +72,13 @@ export default function CreateGroup({ createGroup, toggleState, setIsLoading }: 
             dispatch({ type: 'NEW_CONVERSATION', payload: json });
             dispatch({ type: 'ADD_MESSAGE', payload: json.messages });
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: json });
-        };
+        } else {
+            toast({
+                title: "",
+                description: json.error,
+                variant: 'destructive'
+            })
+        }
     };
 
     return (

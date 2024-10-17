@@ -865,6 +865,29 @@ const leaveGroup = async (req, res) => {
     }
 };
 
+const changeUsername = async (req, res) => {
+    const { userId, newUsername } = req.body;
+    try {
+        const usernameAlreadyTaken = await User.findOne({ username: newUsername });
+
+        if (usernameAlreadyTaken) {
+            return res.status(400).json({ status: 400, error: 'Username already taken' });
+        }
+
+        await User.updateOne({
+            _id: userId
+        },
+            {
+                $set: { username: newUsername }
+            }
+        );
+        res.status(200).json({ message: 'Username changed successfully' });
+    } catch (error) {
+        console.error('Error changing username:', error);
+        res.status(500).json({ status: 500, error: 'An error occurred while changing the username' });
+    }
+};
+
 const changeGroupName = async (req, res) => {
     const { groupId, newGroupName } = req.body;
     try {
@@ -948,5 +971,6 @@ module.exports = {
     getUserBlockedUsers,
     blockUser,
     unBlockUser,
-    changeGroupName
+    changeGroupName,
+    changeUsername
 };

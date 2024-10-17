@@ -70,8 +70,8 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
             setGroupName('');
         } else {
             toast({
-                title: "Ops, something when't wrong",
-                description: json.message,
+                title: "Something went wrong",
+                description: json.error,
                 variant: 'destructive'
             })
         }
@@ -101,8 +101,8 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
             dispatch({ type: 'SET_CLICK_CONVERSATION', payload: null });
         } else {
             toast({
-                title: "Ops, something when't wrong",
-                description: json.message,
+                title: "Something went wrong",
+                description: json.error,
                 variant: 'destructive'
             })
         }
@@ -131,8 +131,8 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
             };
         } else {
             toast({
-                title: "Ops, something when't wrong",
-                description: json.message,
+                title: "Something went wrong",
+                description: json.error,
                 variant: 'destructive'
             })
         }
@@ -156,8 +156,8 @@ export default function ConversationInfo({ isHidden, isUserBlocked, leaveConvers
             dispatch({ type: 'UNBLOCK_USER', payload: json.unBlockUser })
         } else {
             toast({
-                title: "Ops, something when't wrong",
-                description: json.message,
+                title: "Something went wrong",
+                description: json.error,
                 variant: 'destructive'
             })
         }

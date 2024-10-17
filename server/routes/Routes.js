@@ -13,7 +13,8 @@ const {
     blockUser,
     unBlockUser,
     loadMessage,
-    changeGroupName
+    changeGroupName,
+    changeUsername
 } = require('../controllers/RouteController');
 const requireAuth = require('../middlewares/requireAuth');
 
@@ -48,5 +49,7 @@ router.patch('/unblock-user', unBlockUser);
 router.post('/load-message', loadMessage);
 
 router.patch('/conversation-change-group-name', changeGroupName);
+
+router.patch('/change-username', changeUsername);
 
 module.exports = router;

@@ -78,8 +78,8 @@ function GroupMembers({ conversation }: GroupMembersProps) {
     };
     if (!response.ok) {
       toast({
-        title: 'Ops, something went wrong',
-        description: json.message,
+        title: 'Something went wrong',
+        description: json.error,
         variant: 'destructive'
       })
     }
