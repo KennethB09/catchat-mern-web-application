@@ -80,7 +80,7 @@ function UserProfile() {
     return (
         <Dialog>
             <DialogTrigger className="text-start font-semibold text-base text-gray-600 dark:text-gray-300 px-2 py-3 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md cursor-pointer">Profile</DialogTrigger>
-            <DialogContent className="max-sm:h-screen">
+            <DialogContent className="max-sm:h-dvh">
                 <DialogHeader className="max-sm:hidden">
                     <DialogTitle>Profile</DialogTitle>
                 </DialogHeader>
