@@ -267,7 +267,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                 {/* Messages container */}
                 <div id="messages_container" ref={newMessageRef} className={`flex flex-col overflow-y-auto no-scrollbar py-2 mt-auto px-4`}>
 
-                    {conversation?.conversationType == 'personal' ?
+                    {conversation?.conversationType == 'personal' || conversation === null && recipientUser !== null ?
                         <div className="flex flex-col items-center justify-center mb-5 gap-2">
                             <Image className="w-20 h-20 rounded-full" imageSource={recipientUser?.userAvatar} imageOf="personal" />
                             <h1 className="text-orange-500 dark:text-slate-50 font-semibold text-lg">{recipientUser?.username}</h1>
