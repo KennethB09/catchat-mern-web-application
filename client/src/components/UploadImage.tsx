@@ -124,7 +124,7 @@ export default function UploadImage({ uploadPurpose, userIdOrConversationId, ima
 
       {image && (
         <Dialog open={true}>
-          <DialogContent className="max-sm:h-full h-5/6">
+          <DialogContent className="max-sm:h-dvh h-5/6">
             <div className="flex flex-col justify-between h-full gap-2">
               <div className='relative h-[80%] mt-6'>
 

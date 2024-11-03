@@ -179,12 +179,6 @@ export default function Conversation({ onClickConversation, onClick, privateMess
             // If there's no ConversationType it means that it is a new conversation
             privateMessage(newMessage, recipientUser!._id, user.userId);
             setMessage('');
-
-            const messages_container = document.getElementById('messages_container');
-            const message_notice = document.createElement('p');
-            message_notice.className = 'text-slate-orange-500 dark:text-slate-50 text-center';
-            message_notice.textContent = 'You started a conversation.';
-            messages_container?.appendChild(message_notice);
         }
     };
 
@@ -272,6 +266,20 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                 </div>
                 {/* Messages container */}
                 <div id="messages_container" ref={newMessageRef} className={`flex flex-col overflow-y-auto no-scrollbar py-2 mt-auto px-4`}>
+
+                    {conversation?.conversationType == 'personal' ?
+                        <div className="flex flex-col items-center justify-center mb-5 gap-2">
+                            <Image className="w-20 h-20 rounded-full" imageSource={recipientUser?.userAvatar} imageOf="personal" />
+                            <h1 className="text-orange-500 dark:text-slate-50 font-semibold text-lg">{recipientUser?.username}</h1>
+                            <p className="text-gray-700 dark:text-slate-50">Start a conversation with {recipientUser?.username}</p>
+                        </div>
+                        :
+                        <div className="flex flex-col items-center justify-center mb-5 gap-2">
+                            <Image className="w-20 h-20 rounded-full" imageSource={conversation?.groupAvatar} imageOf="group" />
+                            <h1 className="text-orange-500 dark:text-slate-50 font-semibold text-lg">{conversation?.conversationName}</h1>
+                        </div>
+                    }
+
                     <button className={messagesLength! < 20 || conversation === null ? "hidden" : "text-gray-400 font-semibold flex justify-center pb-2"} onClick={loadMoreMessage} disabled={isLoading}>
                         {isLoading ?
                             <svg className='fill-orange-500' xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
@@ -279,6 +287,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             </svg>
                             : 'Load more'}
                     </button>
+
                     {conversation?.conversationType == 'personal' ?
                         <>
                             {sortMessages && sortMessages.map((m, i) =>
@@ -328,7 +337,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                     }
                 </div>
                 {/* Send Message Form */}
-                {conversation?.conversationType == "personal" ?
+                {conversation?.conversationType == "personal" || recipientUser !== null ?
                     <>
                         {isUserBlocked || isCurrentUserBlocked || isCurrentUserGetBlocked ?
                             <div className="w-full">
@@ -343,7 +352,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                                     wrap="soft"
                                     required
                                 />
-                                <Button variant={'ghost'} className="w-fit p-0" disabled={(conversation === null && recipientUser === null) ? true : false}>
+                                <Button variant={'ghost'} className="w-fit p-0" disabled={recipientUser === null}>
                                     <svg className="fill-orange-500" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
                                         <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z" />
                                     </svg>

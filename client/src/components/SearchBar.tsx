@@ -77,7 +77,7 @@ export default function SearchBar({ handleClick, type, placeholder }: SearchBarP
             </div>
 
             {input !== '' &&
-                <div className="absolute w-full overflow-y-scroll p-1 bg-gray-500/30 dark:bg-slate-950/30 backdrop-blur-md rounded-md border-orange-500 mt-2 px-1 no-scrollbar">
+                <div className="absolute max-h-[30rem] w-full overflow-y-scroll p-1 bg-gray-500/30 dark:bg-slate-950/30 backdrop-blur-md rounded-md border-orange-500 mt-2 px-1 no-scrollbar">
                     {isLoading &&
                         <div className="w-full flex justify-center p-2">
                             <svg className='fill-orange-500' xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
@@ -90,8 +90,8 @@ export default function SearchBar({ handleClick, type, placeholder }: SearchBarP
                             <>
                                 {u._id !== user.userId &&
                                     <div key={u._id} onClick={() => handleClick!(u._id)} className="w-full bg-opacity-30 p-2 rounded-md mt-1 text-slate-50 backdrop-blur-sm flex items-center space-x-4 hover:bg-gray-500 dark:hover:bg-gray-800 cursor-pointer z-50">
-                                        
-                                        <Image className="w-12 h-12 rounded-full" imageSource={u.userAvatar} imageOf="personal"/>
+
+                                        <Image className="w-12 h-12 rounded-full" imageSource={u.userAvatar} imageOf="personal" />
 
                                         <p>{u.username}</p>
                                     </div>
@@ -101,19 +101,17 @@ export default function SearchBar({ handleClick, type, placeholder }: SearchBarP
                         :
                         <>
                             {searchResult.map((u: userInterface) => (
-                                <>
-                                    {u._id !== user.userId &&
-                                        <div key={u._id} className="relative flex items-center py-[1px] h-min hover:bg-gray-400 dark:hover:bg-gray-800 rounded-sm">
-                                            <input type="checkbox" name='search_user' value={u._id} onChange={() => handleClick!(u)} className='absolute peer z-auto appearance-none w-full h-full cursor-pointer' />
-                                            <label htmlFor='search_user' className='w-full gap-3 flex items-center peer-checked:bg-slate-300 peer-checked:dark:bg-slate-600 rounded-md p-2'>
-                                                
-                                                <Image className="w-12 h-12 rounded-full" imageSource={u.userAvatar} imageOf="personal"/>
-                                                
-                                                <h1 className="text-slate-50">{u.username}</h1>
-                                            </label>
-                                        </div>
-                                    }
-                                </>
+
+                                <div key={u._id} className={u._id !== user.userId ? "relative flex items-center py-[1px] h-min hover:bg-gray-400 dark:hover:bg-gray-800 rounded-sm" : "hidden"}>
+                                    <input type="checkbox" name='search_user' value={u._id} onChange={() => handleClick!(u)} className='absolute peer z-auto appearance-none w-full h-full cursor-pointer' />
+                                    <label htmlFor='search_user' className='w-full gap-3 flex items-center peer-checked:bg-slate-300 peer-checked:dark:bg-slate-600 rounded-md p-2'>
+
+                                        <Image className="w-12 h-12 rounded-full" imageSource={u.userAvatar} imageOf="personal" />
+
+                                        <h1 className="text-slate-50">{u.username}</h1>
+                                    </label>
+                                </div>
+
                             ))}
                         </>
                     }

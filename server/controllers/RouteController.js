@@ -56,7 +56,6 @@ const upload_image = async (id, image, purpose) => {
             ]
         }
     }).then(response => {
-        console.log(response);
         image_kit_Img = {
             id: response.fileId,
             image: response.name
