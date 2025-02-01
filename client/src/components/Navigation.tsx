@@ -30,7 +30,7 @@ export default function Navigation() {
                     </div>
                     <UserProfile />
                 </div>
-                <Button onClick={logout} variant='outline' className="w-full font-semibold text-red-600 border-red-600 hover:text-red-700 hover:border-red-700  dark:bg-transparent uppercase">logout</Button>
+                <Button onClick={logout} variant='outline' className="w-full font-semibold text-red-600 border-red-600 hover:text-red-700 hover:border-red-700  dark:bg-gray-900 uppercase">logout</Button>
             </div>
         </nav>
     )

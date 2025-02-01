@@ -345,7 +345,7 @@ export default function Conversation({ onClickConversation, onClick, privateMess
                             </div>
                             :
                             <form onSubmit={handleSubmit} className="flex justify-between items-center gap-2 h-13 px-4 py-2 bg-white dark:bg-slate-900 w-full sm:dark:bg-gray-800">
-                                <textarea className="w-full rounded-lg px-2 py-1 h-7 text-wrap text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
+                                <textarea className="w-full rounded-lg px-2 py-1 h-9 sm:h-7 text-wrap text-base sm:text-xs text-slate-600 bg-gray-200 border-2 outline-none focus-visible:border-orange-500"
                                     placeholder="Message"
                                     value={message}
                                     onChange={handleUserTyping}
